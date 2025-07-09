@@ -102,6 +102,12 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
     const commitMessage = formatCommitMessage(commit.message, isLinearView ? 50 : 30);
     const relativeTime = formatRelativeTime(commit.author.date);
     
+    // Identify special commit types
+    const isMergeCommit = commit.parents && commit.parents.length > 1;
+    const isInitialCommit = !commit.parents || commit.parents.length === 0;
+    const isTaggedCommit = commit.tags && commit.tags.length > 0;
+    const hasMultipleBranches = commit.branches && commit.branches.length > 1;
+    
     return (
       <g
         key={`commit-${commit.hash}`}
@@ -111,7 +117,22 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
         onMouseLeave={handleCommitMouseLeave}
         style={{ cursor: 'pointer' }}
       >
-        {/* Commit node circle */}
+        {/* Special commit background indicator */}
+        {(isMergeCommit || isInitialCommit || isTaggedCommit) && (
+          <circle
+            cx={position.x}
+            cy={position.y}
+            r={nodeRadius + 4}
+            fill="none"
+            stroke={isMergeCommit ? '#ff6b6b' : isInitialCommit ? '#4ecdc4' : '#f39c12'}
+            strokeWidth={2}
+            strokeDasharray={isMergeCommit ? '4 2' : isInitialCommit ? 'none' : '2 2'}
+            className="git-commit-special-indicator"
+            opacity={0.6}
+          />
+        )}
+        
+        {/* Main commit node circle */}
         <circle
           cx={position.x}
           cy={position.y}
@@ -122,10 +143,35 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
           className="git-commit-circle"
         />
         
+        {/* Special commit type indicators */}
+        {isMergeCommit && (
+          <text
+            x={position.x}
+            y={position.y + 2}
+            textAnchor="middle"
+            fontSize="8"
+            fill={isSelected ? laneColor : '#fff'}
+            fontWeight="bold"
+            className="git-commit-type-indicator"
+          >
+            M
+          </text>
+        )}
+        
+        {isInitialCommit && (
+          <circle
+            cx={position.x}
+            cy={position.y}
+            r={3}
+            fill={isSelected ? laneColor : '#4ecdc4'}
+            className="git-commit-initial-dot"
+          />
+        )}
+        
         {/* Enhanced metadata display for linear view */}
         {isLinearView && (
           <g className="git-commit-metadata">
-            {/* Commit hash */}
+            {/* Commit hash with special commit indicators */}
             <text
               x={position.x + nodeRadius + 15}
               y={position.y - 15}
@@ -135,6 +181,8 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
               fontFamily="monospace"
             >
               {commitHash}
+              {isMergeCommit && <tspan fill="#ff6b6b" fontWeight="bold"> [MERGE]</tspan>}
+              {isInitialCommit && <tspan fill="#4ecdc4" fontWeight="bold"> [INITIAL]</tspan>}
             </text>
             
             {/* Commit message */}
@@ -160,25 +208,46 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
               {commit.author.name} • {relativeTime}
             </text>
             
-            {/* Branch/tag indicators */}
-            {commit.branches && commit.branches.length > 0 && (
+            {/* Tags display */}
+            {isTaggedCommit && (
               <text
                 x={position.x + nodeRadius + 15}
                 y={position.y + 30}
+                className="git-commit-tags"
+                fontSize="10"
+                fill="#f39c12"
+                fontWeight="bold"
+              >
+                🏷️ {commit.tags.slice(0, 2).join(', ')}
+                {commit.tags.length > 2 && ` +${commit.tags.length - 2}`}
+              </text>
+            )}
+            
+            {/* Branch indicators */}
+            {hasMultipleBranches && (
+              <text
+                x={position.x + nodeRadius + 15}
+                y={position.y + (isTaggedCommit ? 45 : 30)}
                 className="git-commit-branches"
                 fontSize="10"
                 fill={laneColor}
                 fontWeight="bold"
               >
-                {commit.branches.slice(0, 2).join(', ')}
-                {commit.branches.length > 2 && ' +' + (commit.branches.length - 2)}
+                📍 {commit.branches.slice(0, 2).join(', ')}
+                {commit.branches.length > 2 && ` +${commit.branches.length - 2}`}
               </text>
             )}
           </g>
         )}
         
-        {/* Tooltip for all views */}
-        <title>{`${commitHash} - ${commit.message}\nAuthor: ${commit.author.name}\nDate: ${relativeTime}`}</title>
+        {/* Enhanced tooltip for all views */}
+        <title>
+          {`${commitHash} - ${commit.message}\nAuthor: ${commit.author.name}\nDate: ${relativeTime}`}
+          {isMergeCommit && '\nType: Merge Commit'}
+          {isInitialCommit && '\nType: Initial Commit'}
+          {isTaggedCommit && `\nTags: ${commit.tags.join(', ')}`}
+          {hasMultipleBranches && `\nBranches: ${commit.branches.join(', ')}`}
+        </title>
         
         {/* Selection indicator */}
         {isSelected && (
