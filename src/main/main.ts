@@ -153,6 +153,25 @@ app.on('ready', () => {
   
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
+
+  // Register IPC handlers
+  ipcMain.handle('dialog-select-directory', async () => {
+    if (!mainWindow) {
+      return null;
+    }
+
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openDirectory'],
+      title: 'Select Git Repository',
+      message: 'Choose a directory containing a Git repository'
+    });
+
+    if (result.canceled || result.filePaths.length === 0) {
+      return null;
+    }
+
+    return result.filePaths[0];
+  });
 });
 
 // Quit when all windows are closed, except on macOS.
@@ -177,21 +196,4 @@ app.on('web-contents-created', (_event, contents) => {
   });
 });
 
-// IPC handlers
-ipcMain.handle('dialog-select-directory', async () => {
-  if (!mainWindow) {
-    return null;
-  }
 
-  const result = await dialog.showOpenDialog(mainWindow, {
-    properties: ['openDirectory'],
-    title: 'Select Git Repository',
-    message: 'Choose a directory containing a Git repository'
-  });
-
-  if (result.canceled || result.filePaths.length === 0) {
-    return null;
-  }
-
-  return result.filePaths[0];
-});
