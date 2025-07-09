@@ -93,7 +93,6 @@
       "owner": "isaaclins",
       "repo": "GitOhShit"
     },
-    "afterSign": "electron-builder-notarize",
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
