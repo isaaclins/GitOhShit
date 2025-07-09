@@ -61,11 +61,10 @@ describe('App Component', () => {
     expect(screen.getByRole('button', { name: '📁 Open Git Repository' })).toBeInTheDocument();
   });
 
-  test('renders header with title and view label', () => {
+  test('renders header with title', () => {
     render(<App />);
     
     expect(screen.getByText('Git-O-Shit')).toBeInTheDocument();
-    expect(screen.getByText('Commit Browser')).toBeInTheDocument();
   });
 
   test('calls selectDirectory when Open Repository button is clicked', async () => {
