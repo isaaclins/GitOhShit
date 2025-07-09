@@ -280,22 +280,25 @@ export interface GitHook {
 // ===================
 
 export function isGitCommit(obj: unknown): obj is GitCommit {
-  return obj && 
+  return Boolean(obj) && 
     typeof obj === 'object' &&
+    obj !== null &&
     'hash' in obj &&
     typeof (obj as { hash: unknown }).hash === 'string' &&
     'message' in obj &&
     typeof (obj as { message: unknown }).message === 'string' &&
     'author' in obj &&
-    (obj as { author: unknown }).author && 
+    Boolean((obj as { author: unknown }).author) && 
     typeof (obj as { author: { name: unknown } }).author === 'object' &&
+    (obj as { author: { name: unknown } }).author !== null &&
     'name' in (obj as { author: { name: unknown } }).author &&
     typeof (obj as { author: { name: unknown } }).author.name === 'string';
 }
 
 export function isGitBranch(obj: unknown): obj is GitBranch {
-  return obj && 
+  return Boolean(obj) && 
     typeof obj === 'object' &&
+    obj !== null &&
     'name' in obj &&
     typeof (obj as { name: unknown }).name === 'string' &&
     'current' in obj &&
@@ -305,8 +308,9 @@ export function isGitBranch(obj: unknown): obj is GitBranch {
 }
 
 export function isGitRepository(obj: unknown): obj is GitRepository {
-  return obj && 
+  return Boolean(obj) && 
     typeof obj === 'object' &&
+    obj !== null &&
     'path' in obj &&
     typeof (obj as { path: unknown }).path === 'string' &&
     'name' in obj &&
