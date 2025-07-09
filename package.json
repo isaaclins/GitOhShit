@@ -23,7 +23,13 @@
     "type": "git",
     "url": "git+https://github.com/isaaclins/GitOhShit.git"
   },
-  "keywords": ["git", "desktop", "electron", "visualization", "commit-editor"],
+  "keywords": [
+    "git",
+    "desktop",
+    "electron",
+    "visualization",
+    "commit-editor"
+  ],
   "author": "Isaac Lins",
   "license": "MIT",
   "bugs": {
@@ -40,6 +46,7 @@
     "@types/react-dom": "^18.2.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
+    "audit-ci": "^7.1.0",
     "concurrently": "^8.2.0",
     "css-loader": "^6.8.0",
     "electron": "^26.0.0",
@@ -69,20 +76,43 @@
     "appId": "com.gitoshit.app",
     "productName": "Git-O-Shit",
     "directories": {
-      "output": "release"
+      "output": "dist"
     },
     "files": [
       "dist/**/*",
-      "node_modules/**/*"
+      "node_modules/**/*",
+      "!node_modules/**/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!node_modules/*/{test,__tests__,tests,powered-test,example,examples}"
     ],
+    "publish": {
+      "provider": "github",
+      "owner": "isaaclins",
+      "repo": "GitOhShit"
+    },
     "mac": {
-      "category": "public.app-category.developer-tools"
+      "category": "public.app-category.developer-tools",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ]
     },
     "win": {
-      "target": "nsis"
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
     },
     "linux": {
-      "target": "AppImage"
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        }
+      ]
     }
   }
 }
