@@ -131,17 +131,25 @@ export class GraphEngine {
   }
 
   /**
-   * Linear layout - single column of commits
+   * Linear layout - single column of commits following actual Git relationships
+   * Shows commits from the current branch or a filtered linear path
    */
   private calculateLinearLayout(commits: GitCommit[], selectedCommits: string[]): GraphLayout {
     const nodes: CommitNode[] = [];
     const connections: Connection[] = [];
     
-    // Center the commits horizontally for better visual balance
-    const centerX = this.config.laneWidth * 3; // More space on both sides
+    // Create a map for quick commit lookup
+    const commitMap = new Map<string, GitCommit>();
+    commits.forEach(commit => commitMap.set(commit.hash, commit));
     
-    commits.forEach((commit, index) => {
-      const y = index * this.config.verticalSpacing + this.config.nodeHeight; // Add padding at top
+    // Filter commits to show a linear path (main branch lineage)
+    const linearCommits = this.getLinearCommitPath(commits);
+    
+    // Center the commits horizontally for better visual balance
+    const centerX = this.config.laneWidth * 3;
+    
+    linearCommits.forEach((commit, index) => {
+      const y = index * this.config.verticalSpacing + this.config.nodeHeight;
       const x = centerX;
       
       const node: CommitNode = {
@@ -155,23 +163,30 @@ export class GraphEngine {
 
       nodes.push(node);
 
-      // Add connection to previous commit (parent)
-      if (index > 0) {
-        const prevY = (index - 1) * this.config.verticalSpacing + this.config.nodeHeight;
-        const connection: Connection = {
-          from: { x, y: prevY + this.config.nodeHeight / 2 },
-          to: { x, y: y - this.config.nodeHeight / 2 },
-          type: 'parent',
-          color: this.branchColors[0],
-          lane: 0,
-        };
-        connections.push(connection);
+      // Add connections to actual Git parents
+      if (commit.parents && commit.parents.length > 0) {
+        commit.parents.forEach((parentHash) => {
+          // Find the parent node in our linearCommits
+          const parentNodeIndex = linearCommits.findIndex(c => c.hash === parentHash);
+          if (parentNodeIndex !== -1 && parentNodeIndex < index) {
+            const parentY = parentNodeIndex * this.config.verticalSpacing + this.config.nodeHeight;
+            
+            const connection: Connection = {
+              from: { x, y: parentY + this.config.nodeHeight / 2 },
+              to: { x, y: y - this.config.nodeHeight / 2 },
+              type: commit.parents.length > 1 ? 'merge' : 'parent',
+              color: this.branchColors[0],
+              lane: 0,
+            };
+            connections.push(connection);
+          }
+        });
       }
     });
 
-    // Calculate bounds with better proportions
-    const totalHeight = commits.length * this.config.verticalSpacing + this.config.nodeHeight * 2; // Add padding
-    const totalWidth = this.config.laneWidth * 6; // Much wider for better aspect ratio
+    // Calculate bounds with better proportions (more width for metadata in linear view)
+    const totalHeight = linearCommits.length * this.config.verticalSpacing + this.config.nodeHeight * 2;
+    const totalWidth = this.config.laneWidth * 15; // Much wider to accommodate commit metadata
     
     return {
       nodes,
@@ -186,6 +201,41 @@ export class GraphEngine {
       },
       lanes: 1,
     };
+  }
+
+  /**
+   * Get a linear path of commits, typically following the main branch
+   * This creates a simplified view for linear mode
+   */
+  private getLinearCommitPath(commits: GitCommit[]): GitCommit[] {
+    if (commits.length === 0) return [];
+    
+    // Create commit map for quick lookup
+    const commitMap = new Map<string, GitCommit>();
+    commits.forEach(commit => commitMap.set(commit.hash, commit));
+    
+    // Start with the most recent commit (assuming commits are sorted by recency)
+    const linearPath: GitCommit[] = [];
+    const visited = new Set<string>();
+    
+    // Use the first commit as starting point (most recent)
+    let currentCommit: GitCommit | null = commits[0];
+    
+    while (currentCommit && !visited.has(currentCommit.hash)) {
+      visited.add(currentCommit.hash);
+      linearPath.push(currentCommit);
+      
+      // Follow the first parent (main line of development)
+      if (currentCommit.parents && currentCommit.parents.length > 0) {
+        const firstParentHash: string = currentCommit.parents[0];
+        currentCommit = commitMap.get(firstParentHash) || null;
+      } else {
+        // No more parents, we've reached the initial commit
+        break;
+      }
+    }
+    
+    return linearPath;
   }
 
   /**

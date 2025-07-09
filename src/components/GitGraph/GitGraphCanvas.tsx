@@ -4,6 +4,7 @@ import GraphEngine, {
   Connection
 } from '../../lib/visualization/GraphEngine';
 import { GitCommit } from '../../types';
+import { formatCommitHash, formatCommitMessage, formatRelativeTime } from '../../utils/formatters';
 import './GitGraphCanvas.css';
 
 interface GitGraphCanvasProps {
@@ -95,11 +96,16 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
     const branchColors = graphEngine.getBranchColors();
     const laneColor = branchColors[lane % branchColors.length];
     
+    // Enhanced metadata for linear view
+    const isLinearView = viewMode === 'linear';
+    const commitHash = formatCommitHash(commit.hash);
+    const commitMessage = formatCommitMessage(commit.message, isLinearView ? 50 : 30);
+    const relativeTime = formatRelativeTime(commit.author.date);
+    
     return (
       <g
         key={`commit-${commit.hash}`}
-        className={`git-commit-node ${isSelected ? 'git-commit-node--selected' : ''}`}
-        transform={`translate(${position.x}, ${position.y})`}
+        className={`git-commit-node ${isSelected ? 'git-commit-node--selected' : ''} ${isLinearView ? 'git-commit-node--linear' : ''}`}
         onClick={() => handleCommitClick(commitNode)}
         onMouseEnter={() => handleCommitMouseEnter(commitNode)}
         onMouseLeave={handleCommitMouseLeave}
@@ -107,6 +113,8 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
       >
         {/* Commit node circle */}
         <circle
+          cx={position.x}
+          cy={position.y}
           r={nodeRadius}
           fill={isSelected ? '#ffffff' : laneColor}
           stroke={isSelected ? laneColor : '#333333'}
@@ -114,20 +122,77 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
           className="git-commit-circle"
         />
         
-        {/* Commit hash tooltip (short version) */}
-        <title>{`${commit.hash.substring(0, 8)} - ${commit.message}`}</title>
+        {/* Enhanced metadata display for linear view */}
+        {isLinearView && (
+          <g className="git-commit-metadata">
+            {/* Commit hash */}
+            <text
+              x={position.x + nodeRadius + 15}
+              y={position.y - 15}
+              className="git-commit-hash"
+              fontSize="12"
+              fill="#666"
+              fontFamily="monospace"
+            >
+              {commitHash}
+            </text>
+            
+            {/* Commit message */}
+            <text
+              x={position.x + nodeRadius + 15}
+              y={position.y}
+              className="git-commit-message"
+              fontSize="14"
+              fill="#333"
+              fontWeight={isSelected ? 'bold' : 'normal'}
+            >
+              {commitMessage}
+            </text>
+            
+            {/* Author and date */}
+            <text
+              x={position.x + nodeRadius + 15}
+              y={position.y + 15}
+              className="git-commit-author-date"
+              fontSize="11"
+              fill="#888"
+            >
+              {commit.author.name} • {relativeTime}
+            </text>
+            
+            {/* Branch/tag indicators */}
+            {commit.branches && commit.branches.length > 0 && (
+              <text
+                x={position.x + nodeRadius + 15}
+                y={position.y + 30}
+                className="git-commit-branches"
+                fontSize="10"
+                fill={laneColor}
+                fontWeight="bold"
+              >
+                {commit.branches.slice(0, 2).join(', ')}
+                {commit.branches.length > 2 && ' +' + (commit.branches.length - 2)}
+              </text>
+            )}
+          </g>
+        )}
         
-        {/* Optional: Small dot in center for selected commits */}
+        {/* Tooltip for all views */}
+        <title>{`${commitHash} - ${commit.message}\nAuthor: ${commit.author.name}\nDate: ${relativeTime}`}</title>
+        
+        {/* Selection indicator */}
         {isSelected && (
           <circle
-            r={2}
+            cx={position.x}
+            cy={position.y}
+            r={3}
             fill={laneColor}
             className="git-commit-selected-dot"
           />
         )}
       </g>
     );
-  }, [graphEngine, handleCommitClick, handleCommitMouseEnter, handleCommitMouseLeave]);
+  }, [graphEngine, handleCommitClick, handleCommitMouseEnter, handleCommitMouseLeave, viewMode]);
 
   // Calculate viewport dimensions
   const viewBox = layout.bounds.width > 0 && layout.bounds.height > 0

@@ -88,6 +88,57 @@
   transition: all 0.2s ease;
 }
 
+/* Enhanced commit metadata for linear view */
+.git-commit-metadata {
+  pointer-events: none;
+  user-select: none;
+}
+
+.git-commit-hash {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+  fill: var(--text-muted, #666666);
+}
+
+.git-commit-message {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  fill: var(--text-primary, #333333);
+  font-weight: 500;
+}
+
+.git-commit-node--selected .git-commit-message {
+  font-weight: 600;
+  fill: var(--text-primary, #000000);
+}
+
+.git-commit-author-date {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 11px;
+  fill: var(--text-secondary, #888888);
+}
+
+.git-commit-branches {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+/* Linear view specific styling */
+.git-commit-node--linear {
+  transform-origin: center left;
+}
+
+.git-commit-node--linear:hover .git-commit-metadata text {
+  opacity: 1;
+}
+
+.git-commit-metadata text {
+  opacity: 0.9;
+  transition: opacity 0.2s ease;
+}
+
 /* Debug info */
 .git-graph-debug {
   position: absolute;
@@ -120,6 +171,22 @@
   
   .git-commit-node--selected .git-commit-circle {
     stroke: #ffffff;
+  }
+  
+  .git-commit-hash {
+    fill: var(--text-muted, #999999);
+  }
+  
+  .git-commit-message {
+    fill: var(--text-primary, #ffffff);
+  }
+  
+  .git-commit-node--selected .git-commit-message {
+    fill: var(--text-primary, #ffffff);
+  }
+  
+  .git-commit-author-date {
+    fill: var(--text-secondary, #bbbbbb);
   }
 }
 
