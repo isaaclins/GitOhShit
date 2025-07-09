@@ -380,31 +380,7 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
     );
   }, [graphEngine, handleCommitClick, handleCommitMouseEnter, handleCommitMouseLeave, viewMode]);
 
-  // Calculate viewport dimensions
-  const viewBox = layout.bounds.width > 0 && layout.bounds.height > 0
-    ? `${layout.bounds.minX - 20} ${layout.bounds.minY - 20} ${layout.bounds.width + 40} ${layout.bounds.height + 40}`
-    : '0 0 100 100';
-
-  // Different scaling behavior for different view modes
-  const isLinearView = viewMode === 'linear';
-  const isTreeView = viewMode === 'tree';
-  const isTimelineView = viewMode === 'timeline';
-  
-  // Linear view: enable scrolling, tree view: scale to fit, timeline: enable scrolling with time labels
-  const svgHeight = (isLinearView || isTimelineView) ? layout.bounds.height + 40 : '100%';
-  const preserveAspectRatio = (isLinearView || isTimelineView) ? 'xMidYMin slice' : 'xMidYMin meet';
-  
-  if (commits.length === 0) {
-    return (
-      <div className={`git-graph-canvas git-graph-canvas--empty ${className}`}>
-        <div className="git-graph-empty-state">
-          <p>No commits to display</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Function to render time period labels for timeline view
+  // Function to render time period labels for timeline view - moved before early return to fix Rules of Hooks
   const renderTimeLabels = useCallback(() => {
     if (viewMode !== 'timeline' || commits.length === 0) return null;
     
@@ -534,6 +510,30 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
       );
     });
   }, [viewMode, commits, layout, graphEngine]);
+
+  // Calculate viewport dimensions
+  const viewBox = layout.bounds.width > 0 && layout.bounds.height > 0
+    ? `${layout.bounds.minX - 20} ${layout.bounds.minY - 20} ${layout.bounds.width + 40} ${layout.bounds.height + 40}`
+    : '0 0 100 100';
+
+  // Different scaling behavior for different view modes
+  const isLinearView = viewMode === 'linear';
+  const isTreeView = viewMode === 'tree';
+  const isTimelineView = viewMode === 'timeline';
+  
+  // Linear view: enable scrolling, tree view: scale to fit, timeline: enable scrolling with time labels
+  const svgHeight = (isLinearView || isTimelineView) ? layout.bounds.height + 40 : '100%';
+  const preserveAspectRatio = (isLinearView || isTimelineView) ? 'xMidYMin slice' : 'xMidYMin meet';
+  
+  if (commits.length === 0) {
+    return (
+      <div className={`git-graph-canvas git-graph-canvas--empty ${className}`}>
+        <div className="git-graph-empty-state">
+          <p>No commits to display</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`git-graph-canvas ${isLinearView ? 'git-graph-canvas--linear' : ''} ${isTreeView ? 'git-graph-canvas--tree' : ''} ${isTimelineView ? 'git-graph-canvas--timeline' : ''} ${className}`}>
