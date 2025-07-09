@@ -63,7 +63,7 @@ Based on PRD: `prd-git-o-shit.md`
   - [x] 1.1 Initialize Electron project with TypeScript and React
   - [x] 1.2 Configure build system (Webpack, TypeScript, Electron Builder)
   - [x] 1.3 Setup testing framework (Jest, React Testing Library)
-  - [ ] 1.4 Configure linting and code formatting (ESLint, Prettier)
+  - [x] 1.4 Configure linting and code formatting (ESLint, Prettier)
   - [ ] 1.5 Setup GitHub Actions CI/CD pipeline for cross-platform testing and building
   - [ ] 1.6 Create basic project structure and folder organization
 
