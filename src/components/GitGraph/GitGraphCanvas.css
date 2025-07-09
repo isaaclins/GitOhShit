@@ -130,13 +130,45 @@
   transform-origin: center left;
 }
 
+.git-commit-node--linear:hover {
+  transform: scale(1.02);
+}
+
 .git-commit-node--linear:hover .git-commit-metadata text {
   opacity: 1;
 }
 
+.git-commit-node--linear:hover .git-commit-message {
+  font-weight: 600;
+}
+
 .git-commit-metadata text {
   opacity: 0.9;
-  transition: opacity 0.2s ease;
+  transition: all 0.2s ease;
+}
+
+/* Visual hierarchy improvements */
+.git-commit-metadata .git-commit-hash {
+  letter-spacing: 0.5px;
+}
+
+.git-commit-metadata .git-commit-message {
+  transition: font-weight 0.2s ease;
+}
+
+/* Better spacing and alignment */
+.git-commit-node--linear .git-commit-metadata {
+  dominant-baseline: middle;
+}
+
+/* Improved readability */
+.git-commit-author-date {
+  opacity: 0.8;
+}
+
+.git-commit-node--selected .git-commit-author-date {
+  opacity: 1;
+  font-weight: 500;
 }
 
 /* Special commit type indicators */
@@ -256,6 +288,28 @@
   
   .git-commit-node:hover {
     transform: scale(1.2);
+  }
+  
+  /* Mobile-optimized linear view */
+  .git-commit-node--linear .git-commit-metadata text {
+    font-size: 12px;
+  }
+  
+  .git-commit-hash {
+    font-size: 10px;
+  }
+  
+  .git-commit-message {
+    font-size: 13px;
+  }
+  
+  .git-commit-author-date {
+    font-size: 10px;
+  }
+  
+  .git-commit-tags,
+  .git-commit-branches {
+    font-size: 9px;
   }
 }
 
