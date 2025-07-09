@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { AppStateProvider, useAppState } from '../contexts/AppStateContext';
+import { GitCommit, GitBranch } from '../types';
 import GitGraphCanvas from '../components/GitGraph/GitGraphCanvas';
 
 
@@ -35,6 +36,30 @@ const AppContent: React.FC = () => {
         maxCount: 50,
       });
       actions.setCommits(commits);
+
+      // Extract available branches from commits and repository
+      const branchesFromCommits = new Set<string>();
+      if (commits && Array.isArray(commits)) {
+        commits.forEach((commit: GitCommit) => {
+          if (commit.branches && Array.isArray(commit.branches)) {
+            commit.branches.forEach((branch: string) => branchesFromCommits.add(branch));
+          }
+        });
+      }
+      
+      // Add branches from repository info
+      if (repository.branches && Array.isArray(repository.branches)) {
+        repository.branches.forEach((branch: GitBranch) => branchesFromCommits.add(branch.name));
+      }
+      
+      // Convert to array and set available branches
+      const availableBranches = Array.from(branchesFromCommits).sort();
+      actions.setAvailableBranches(availableBranches);
+      
+      // Set current branch as selected if it exists in available branches
+      if (availableBranches.includes(repository.currentBranch)) {
+        actions.setSelectedBranch(repository.currentBranch);
+      }
 
       actions.setLoading(false);
     } catch (error) {
@@ -224,6 +249,28 @@ const AppContent: React.FC = () => {
                 </span>
               </div>
 
+              {/* Branch Filter Selector */}
+              <div style={styles.branchFilter}>
+                <label style={styles.branchFilterLabel}>
+                  Filter by branch:
+                </label>
+                <select 
+                  style={styles.branchFilterSelect}
+                  value={state.selectedBranch || ''}
+                  onChange={(e) => {
+                    const value = e.target.value || null;
+                    actions.setSelectedBranch(value);
+                  }}
+                >
+                  <option value="">All branches</option>
+                  {state.repository.branches && state.repository.branches.map((branch) => (
+                    <option key={branch.name} value={branch.name}>
+                      {branch.name} {branch.current ? '(current)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {state.repository.status && (
                 <div style={styles.repoStatus}>
                   {state.repository.status.ahead > 0 && (
@@ -275,6 +322,7 @@ const AppContent: React.FC = () => {
                   onCommitSelect={handleCommitSelect}
                   onCommitHover={handleCommitHover}
                   viewMode={state.currentView}
+                  branchFilter={state.selectedBranch}
                   className="git-graph-main"
                 />
               )}
@@ -516,6 +564,23 @@ const styles = {
     textAlign: 'center' as const,
     marginTop: '100px',
     color: '#888888',
+  },
+  branchFilter: {
+    marginTop: '16px',
+    marginBottom: '8px',
+  },
+  branchFilterLabel: {
+    fontSize: '14px',
+    color: '#888888',
+    marginRight: '8px',
+  },
+  branchFilterSelect: {
+    padding: '8px',
+    borderRadius: '4px',
+    backgroundColor: '#3e3e3e',
+    color: '#ffffff',
+    border: '1px solid #555555',
+    fontSize: '14px',
   },
 };
 

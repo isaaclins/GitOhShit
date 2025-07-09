@@ -5,7 +5,7 @@ import { AppState, ViewMode, AppMode, GitRepository, GitCommit } from '../types'
 // Action Types
 // ===================
 
-type AppAction = 
+type AppAction =
   | { type: 'SET_REPOSITORY'; payload: GitRepository }
   | { type: 'CLOSE_REPOSITORY' }
   | { type: 'SET_COMMITS'; payload: GitCommit[] }
@@ -17,7 +17,9 @@ type AppAction =
   | { type: 'SET_APP_MODE'; payload: AppMode }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string | null }
-  | { type: 'RESET_STATE' };
+  | { type: 'RESET_STATE' }
+  | { type: 'SET_SELECTED_BRANCH'; payload: string | null }
+  | { type: 'SET_AVAILABLE_BRANCHES'; payload: string[] };
 
 // ===================
 // Initial State
@@ -33,6 +35,8 @@ const initialState: AppState = {
   error: null,
   undoStack: [],
   redoStack: [],
+  selectedBranch: null,
+  availableBranches: [],
 };
 
 // ===================
@@ -119,6 +123,18 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'RESET_STATE':
       return initialState;
 
+    case 'SET_SELECTED_BRANCH':
+      return {
+        ...state,
+        selectedBranch: action.payload,
+      };
+
+    case 'SET_AVAILABLE_BRANCHES':
+      return {
+        ...state,
+        availableBranches: action.payload,
+      };
+
     default:
       return state;
   }
@@ -142,6 +158,8 @@ interface AppStateContextType {
     setLoading: (loading: boolean) => void;
     setError: (error: string | null) => void;
     resetState: () => void;
+    setSelectedBranch: (branch: string | null) => void;
+    setAvailableBranches: (branches: string[]) => void;
   };
 }
 
@@ -206,6 +224,14 @@ export const AppStateProvider: React.FC<AppStateProviderProps> = ({ children }) 
 
     resetState: () => {
       dispatch({ type: 'RESET_STATE' });
+    },
+
+    setSelectedBranch: (branch: string | null) => {
+      dispatch({ type: 'SET_SELECTED_BRANCH', payload: branch });
+    },
+
+    setAvailableBranches: (branches: string[]) => {
+      dispatch({ type: 'SET_AVAILABLE_BRANCHES', payload: branches });
     },
   };
 

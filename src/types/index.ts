@@ -137,6 +137,9 @@ export interface AppState {
   error: string | null;
   undoStack: HistoryEntry[];
   redoStack: HistoryEntry[];
+  // Branch filtering
+  selectedBranch: string | null; // null means show all branches
+  availableBranches: string[];
 }
 
 export interface HistoryEntry {

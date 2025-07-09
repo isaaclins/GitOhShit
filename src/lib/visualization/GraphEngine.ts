@@ -108,7 +108,7 @@ export class GraphEngine {
   /**
    * Calculate layout for a list of commits
    */
-  calculateLayout(commits: GitCommit[], selectedCommits: string[] = []): GraphLayout {
+  calculateLayout(commits: GitCommit[], selectedCommits: string[] = [], branchFilter?: string | null): GraphLayout {
     if (commits.length === 0) {
       return {
         nodes: [],
@@ -118,16 +118,33 @@ export class GraphEngine {
       };
     }
 
+    // Filter commits by branch if specified
+    const filteredCommits = branchFilter ? this.filterCommitsByBranch(commits, branchFilter) : commits;
+
     switch (this.config.viewMode) {
       case 'linear':
-        return this.calculateLinearLayout(commits, selectedCommits);
+        return this.calculateLinearLayout(filteredCommits, selectedCommits);
       case 'tree':
-        return this.calculateTreeLayout(commits, selectedCommits);
+        return this.calculateTreeLayout(filteredCommits, selectedCommits);
       case 'timeline':
-        return this.calculateTimelineLayout(commits, selectedCommits);
+        return this.calculateTimelineLayout(filteredCommits, selectedCommits);
       default:
-        return this.calculateLinearLayout(commits, selectedCommits);
+        return this.calculateLinearLayout(filteredCommits, selectedCommits);
     }
+  }
+
+  /**
+   * Filter commits to only include those from a specific branch
+   */
+  private filterCommitsByBranch(commits: GitCommit[], branchName: string): GitCommit[] {
+    if (!branchName) return commits;
+    
+    // If branch filter is applied, show only commits that belong to the specified branch
+    return commits.filter(commit => 
+      commit.branches.includes(branchName) || 
+      // Also include commits that don't have branch info (fallback)
+      (commit.branches.length === 0 && branchName === 'main')
+    );
   }
 
   /**

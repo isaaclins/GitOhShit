@@ -14,6 +14,7 @@ interface GitGraphCanvasProps {
   onCommitHover: (commitHash: string | null) => void;
   viewMode?: 'linear' | 'tree' | 'timeline';
   className?: string;
+  branchFilter?: string | null;
 }
 
 const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
@@ -23,6 +24,7 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
   onCommitHover,
   viewMode = 'linear',
   className = '',
+  branchFilter,
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const graphEngine = useMemo(() => new GraphEngine(), []);
@@ -34,8 +36,8 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
 
   // Calculate layout
   const layout = useMemo(() => {
-    return graphEngine.calculateLayout(commits, selectedCommits);
-  }, [graphEngine, commits, selectedCommits]);
+    return graphEngine.calculateLayout(commits, selectedCommits, branchFilter);
+  }, [graphEngine, commits, selectedCommits, branchFilter]);
 
   // Handle commit click
   const handleCommitClick = useCallback((commitNode: CommitNode) => {
