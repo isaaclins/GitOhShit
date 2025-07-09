@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, MenuItemConstructorOptions } from 'electron';
+import { app, BrowserWindow, Menu, MenuItemConstructorOptions, ipcMain, dialog } from 'electron';
 import * as path from 'path';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -177,4 +177,21 @@ app.on('web-contents-created', (_event, contents) => {
   });
 });
 
-// IPC handlers will be added here as we develop features 
+// IPC handlers
+ipcMain.handle('dialog-select-directory', async () => {
+  if (!mainWindow) {
+    return null;
+  }
+
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openDirectory'],
+    title: 'Select Git Repository',
+    message: 'Choose a directory containing a Git repository'
+  });
+
+  if (result.canceled || result.filePaths.length === 0) {
+    return null;
+  }
+
+  return result.filePaths[0];
+});
