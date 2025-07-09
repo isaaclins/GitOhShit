@@ -258,85 +258,152 @@ export class GraphEngine {
   }
 
   /**
-   * Tree layout - shows branches and merges
+   * Tree layout - shows branches and merges with proper Git graph visualization
    */
   private calculateTreeLayout(commits: GitCommit[], selectedCommits: string[]): GraphLayout {
+    if (commits.length === 0) {
+      return {
+        nodes: [],
+        connections: [],
+        bounds: { width: 0, height: 0, minX: 0, maxX: 0, minY: 0, maxY: 0 },
+        lanes: 0,
+      };
+    }
+
     const nodes: CommitNode[] = [];
     const connections: Connection[] = [];
-    const laneAssignments = new Map<string, number>();
-    const branches = this.analyzeBranches(commits);
     
-    let currentLane = 0;
-    const usedLanes = new Set<number>();
-
+    // Create commit lookup map
+    const commitMap = new Map<string, GitCommit>();
+    commits.forEach(commit => commitMap.set(commit.hash, commit));
+    
+    // Track lane assignments and usage
+    const laneAssignments = new Map<string, number>();
+    const activeLanes = new Map<number, string>(); // lane -> commit hash using that lane
+    const laneColors = new Map<number, string>();
+    
+    let nextAvailableLane = 0;
+    
+    // Process commits in order (assuming they're already in topological order)
     commits.forEach((commit, index) => {
-      const y = index * this.config.verticalSpacing;
+      const y = index * this.config.verticalSpacing + this.config.nodeHeight;
       
-      // Assign lane based on branch analysis
-      let lane = laneAssignments.get(commit.hash);
-      if (lane === undefined) {
-        // Find the branch this commit belongs to
-        const branch = branches.find(b => b.commits.includes(commit.hash));
-        if (branch) {
-          lane = branch.lane;
-        } else {
-          // Assign new lane
-          lane = this.findAvailableLane(usedLanes, currentLane);
-          currentLane = Math.max(currentLane, lane + 1);
+      // Determine lane for this commit
+      let assignedLane = laneAssignments.get(commit.hash);
+      
+      if (assignedLane === undefined) {
+        // Check if any parent is in an active lane we can continue
+        let parentLane: number | undefined;
+        if (commit.parents && commit.parents.length > 0) {
+          // Try to continue on the first parent's lane
+          const firstParent = commit.parents[0];
+          parentLane = laneAssignments.get(firstParent);
         }
-        laneAssignments.set(commit.hash, lane);
+        
+        if (parentLane !== undefined && activeLanes.get(parentLane) === (commit.parents?.[0] || '')) {
+          // Continue on parent's lane
+          assignedLane = parentLane;
+        } else {
+          // Need a new lane
+          assignedLane = nextAvailableLane;
+          while (activeLanes.has(assignedLane)) {
+            assignedLane++;
+          }
+          nextAvailableLane = Math.max(nextAvailableLane, assignedLane + 1);
+        }
+        
+        laneAssignments.set(commit.hash, assignedLane);
       }
       
-      usedLanes.add(lane);
-      const x = this.config.laneWidth + (lane * this.config.laneWidth);
-
+      // Update active lanes
+      activeLanes.set(assignedLane, commit.hash);
+      
+      // Assign color for this lane
+      if (!laneColors.has(assignedLane)) {
+        laneColors.set(assignedLane, this.branchColors[assignedLane % this.branchColors.length]);
+      }
+      
+      const x = this.config.laneWidth + (assignedLane * this.config.laneWidth);
+      
       const node: CommitNode = {
         commit,
         position: { x, y },
-        lane,
+        lane: assignedLane,
         connections: [],
         isSelected: selectedCommits.includes(commit.hash),
         isHighlighted: false,
       };
-
+      
       nodes.push(node);
-
-      // Add connections to parents
+      
+      // Create connections to parents
       if (commit.parents && commit.parents.length > 0) {
-        commit.parents.forEach((parentHash, _parentIndex) => {
-          const parentNode = nodes.find(n => n.commit.hash === parentHash);
-          if (parentNode) {
-            const isMerge = commit.parents.length > 1;
-            const connectionType = isMerge ? 'merge' : 'parent';
-            const color = this.branchColors[lane % this.branchColors.length];
-
-            const connection: Connection = {
-              from: parentNode.position,
-              to: { x, y },
-              type: connectionType,
-              color,
-              lane,
-            };
-            connections.push(connection);
+        commit.parents.forEach((parentHash, parentIndex) => {
+          const parentCommit = commitMap.get(parentHash);
+          if (parentCommit) {
+            // Find parent node (it should be processed already since commits are in order)
+            const parentNode = nodes.find(n => n.commit.hash === parentHash);
+            if (parentNode) {
+              const isMainParent = parentIndex === 0;
+              const isMergeCommit = commit.parents.length > 1;
+              
+              // Connection type and styling
+              let connectionType: Connection['type'] = 'parent';
+              if (isMergeCommit) {
+                connectionType = parentIndex === 0 ? 'parent' : 'merge';
+              }
+              
+              // Connection color - use target lane color for main connections
+              const connectionColor = isMainParent 
+                ? laneColors.get(assignedLane) || this.branchColors[0]
+                : laneColors.get(parentNode.lane) || this.branchColors[1];
+              
+              // Create connection path
+              const connection: Connection = {
+                from: { 
+                  x: parentNode.position.x, 
+                  y: parentNode.position.y + this.config.nodeHeight / 2 
+                },
+                to: { 
+                  x: x, 
+                  y: y - this.config.nodeHeight / 2 
+                },
+                type: connectionType,
+                color: connectionColor,
+                lane: isMainParent ? assignedLane : parentNode.lane,
+              };
+              
+              connections.push(connection);
+            }
           }
         });
       }
+      
+      // Clear this commit from active lanes if it has no children coming up
+      const hasChildrenAhead = commits.slice(index + 1).some(futureCommit => 
+        futureCommit.parents && futureCommit.parents.includes(commit.hash)
+      );
+      
+      if (!hasChildrenAhead) {
+        activeLanes.delete(assignedLane);
+      }
     });
-
-    const maxLane = Math.max(...Array.from(usedLanes));
-    const height = Math.max(0, (commits.length - 1) * this.config.verticalSpacing + this.config.nodeHeight);
-    const width = this.config.laneWidth * (maxLane + 2);
-
+    
+    // Calculate bounds
+    const maxLane = Math.max(0, ...Array.from(laneAssignments.values()));
+    const totalWidth = this.config.laneWidth * (maxLane + 3);
+    const totalHeight = commits.length * this.config.verticalSpacing + this.config.nodeHeight * 2;
+    
     return {
       nodes,
       connections,
       bounds: {
-        width,
-        height,
+        width: totalWidth,
+        height: totalHeight,
         minX: 0,
-        maxX: width,
+        maxX: totalWidth,
         minY: 0,
-        maxY: height,
+        maxY: totalHeight,
       },
       lanes: maxLane + 1,
     };

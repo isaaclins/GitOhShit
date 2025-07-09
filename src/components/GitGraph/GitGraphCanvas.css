@@ -540,3 +540,85 @@
   outline: 2px solid var(--focus-color, #0066cc);
   outline-offset: 2px;
 } 
+
+.git-graph-canvas--tree {
+  overflow: auto;
+  background: linear-gradient(
+    90deg,
+    rgba(59, 130, 246, 0.03) 0%,
+    rgba(16, 185, 129, 0.02) 100%
+  );
+}
+
+/* Tree view specific commit styling */
+.git-commit-node--tree {
+  transition: all 0.2s ease;
+}
+
+.git-commit-node--tree:hover {
+  transform: scale(1.1);
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.15));
+}
+
+.git-commit-node--tree .git-commit-circle {
+  transition: all 0.2s ease;
+}
+
+.git-commit-node--tree:hover .git-commit-circle {
+  stroke-width: 2;
+  filter: brightness(1.1);
+}
+
+/* Tree view metadata styling */
+.git-commit-metadata--tree {
+  pointer-events: none;
+  user-select: none;
+}
+
+.git-commit-metadata--tree .git-commit-hash {
+  font-family: 'SF Mono', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  letter-spacing: 0.02em;
+}
+
+.git-commit-metadata--tree .git-commit-message {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, sans-serif;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Connection lines styling for tree view */
+.git-graph-canvas--tree .git-connection {
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.git-graph-canvas--tree .git-connection--merge {
+  stroke-dasharray: 4 3;
+  opacity: 0.9;
+}
+
+.git-graph-canvas--tree .git-connection:hover {
+  opacity: 1;
+  stroke-width: 3 !important;
+}
+
+/* Lane visualization helpers */
+.git-graph-canvas--tree::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    transparent 39px,
+    rgba(0, 0, 0, 0.02) 40px,
+    rgba(0, 0, 0, 0.02) 40px
+  );
+  pointer-events: none;
+  z-index: -1;
+} 

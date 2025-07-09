@@ -100,6 +100,7 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
     
     // Enhanced metadata for linear view
     const isLinearView = viewMode === 'linear';
+    const isTreeView = viewMode === 'tree';
     const commitHash = formatCommitHash(commit.hash);
     const commitMessage = formatCommitMessage(commit.message, isLinearView ? 50 : 30);
     const relativeTime = formatRelativeTime(commit.author.date);
@@ -113,7 +114,7 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
     return (
       <g
         key={`commit-${commit.hash}`}
-        className={`git-commit-node ${isSelected ? 'git-commit-node--selected' : ''} ${isLinearView ? 'git-commit-node--linear' : ''}`}
+        className={`git-commit-node ${isSelected ? 'git-commit-node--selected' : ''} ${isLinearView ? 'git-commit-node--linear' : ''} ${isTreeView ? 'git-commit-node--tree' : ''}`}
         onClick={() => handleCommitClick(commitNode)}
         onMouseEnter={() => handleCommitMouseEnter(commitNode)}
         onMouseLeave={handleCommitMouseLeave}
@@ -168,6 +169,53 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
             fill={isSelected ? laneColor : '#4ecdc4'}
             className="git-commit-initial-dot"
           />
+        )}
+
+        {/* Tree view simplified metadata */}
+        {isTreeView && (
+          <g className="git-commit-metadata git-commit-metadata--tree">
+            {/* Commit hash only */}
+            <text
+              x={position.x + nodeRadius + 12}
+              y={position.y - 8}
+              className="git-commit-hash"
+              fontSize="10"
+              fill="#6b7280"
+              fontFamily="SF Mono, Monaco, Menlo, Ubuntu Mono, monospace"
+              fontWeight="500"
+            >
+              {commitHash}
+              {isMergeCommit && <tspan fill="#ef4444" fontWeight="700" fontSize="8"> M</tspan>}
+              {isInitialCommit && <tspan fill="#06b6d4" fontWeight="700" fontSize="8"> I</tspan>}
+            </text>
+            
+            {/* Shortened commit message */}
+            <text
+              x={position.x + nodeRadius + 12}
+              y={position.y + 6}
+              className="git-commit-message"
+              fontSize="12"
+              fill="#1f2937"
+              fontWeight={isSelected ? '600' : '500'}
+              fontFamily="-apple-system, BlinkMacSystemFont, Segoe UI, Inter, Roboto, sans-serif"
+            >
+              {formatCommitMessage(commit.message, 25)}
+            </text>
+            
+            {/* Tags indicator for tree view */}
+            {isTaggedCommit && (
+              <text
+                x={position.x + nodeRadius + 12}
+                y={position.y + 18}
+                className="git-commit-tags"
+                fontSize="9"
+                fill="#f59e0b"
+                fontWeight="600"
+              >
+                🏷️ {commit.tags.length > 1 ? `${commit.tags.length} tags` : commit.tags[0]}
+              </text>
+            )}
+          </g>
         )}
         
         {/* Enhanced metadata display for linear view */}
@@ -273,11 +321,14 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
     ? `${layout.bounds.minX - 20} ${layout.bounds.minY - 20} ${layout.bounds.width + 40} ${layout.bounds.height + 40}`
     : '0 0 100 100';
 
-  // For linear view, we want scrolling instead of scaling
+  // Different scaling behavior for different view modes
   const isLinearView = viewMode === 'linear';
+  const isTreeView = viewMode === 'tree';
+  
+  // Linear view: enable scrolling, tree view: scale to fit, timeline: scale to fit
   const svgHeight = isLinearView ? layout.bounds.height + 40 : '100%';
   const preserveAspectRatio = isLinearView ? 'xMidYMin slice' : 'xMidYMin meet';
-
+  
   if (commits.length === 0) {
     return (
       <div className={`git-graph-canvas git-graph-canvas--empty ${className}`}>
@@ -289,7 +340,7 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
   }
 
   return (
-    <div className={`git-graph-canvas ${isLinearView ? 'git-graph-canvas--linear' : ''} ${className}`}>
+    <div className={`git-graph-canvas ${isLinearView ? 'git-graph-canvas--linear' : ''} ${isTreeView ? 'git-graph-canvas--tree' : ''} ${className}`}>
       <svg
         ref={svgRef}
         viewBox={viewBox}
