@@ -12,7 +12,7 @@ const GitGraph: React.FC<GitGraphProps> = ({
   selectedCommits,
   onCommitSelect,
   onCommitEdit,
-  onCommitMove,
+  _onCommitMove,
 }) => {
   return (
     <div className="git-graph">

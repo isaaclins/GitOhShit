@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { AppStateProvider, useAppState } from '../contexts/AppStateContext';
 import GitGraphCanvas from '../components/GitGraph/GitGraphCanvas';
-import { GitRepository, GitCommit } from '../types';
+
 
 const AppContent: React.FC = () => {
   const { state, actions } = useAppState();

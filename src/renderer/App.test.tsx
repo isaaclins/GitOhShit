@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from './App';
 
@@ -223,7 +223,7 @@ describe('App Component', () => {
   test('handles undefined electronAPI gracefully', () => {
     // Temporarily remove electronAPI
     const originalAPI = window.electronAPI;
-    // @ts-ignore
+    // @ts-expect-error - Temporarily removing electronAPI for test
     delete window.electronAPI;
     
     // Should not throw error

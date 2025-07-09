@@ -11,8 +11,8 @@ const CommitNode: React.FC<CommitNodeProps> = ({
   highlighted,
   onClick,
   onDoubleClick,
-  onDragStart,
-  onDragEnd,
+  _onDragStart,
+  _onDragEnd,
 }) => {
   return (
     <g

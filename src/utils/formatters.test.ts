@@ -60,8 +60,6 @@ describe('Formatter Utilities', () => {
     });
 
     test('formats recent times correctly', () => {
-      const now = new Date('2024-01-15T12:00:00Z');
-      
       expect(formatRelativeTime(new Date('2024-01-15T11:59:30Z'))).toBe('just now');
       expect(formatRelativeTime(new Date('2024-01-15T11:59:00Z'))).toBe('1 minute ago');
       expect(formatRelativeTime(new Date('2024-01-15T11:55:00Z'))).toBe('5 minutes ago');

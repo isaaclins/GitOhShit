@@ -1,10 +1,7 @@
 import React, { useMemo, useCallback, useRef, useEffect } from 'react';
 import GraphEngine, { 
-  GraphLayout, 
   CommitNode, 
-  Connection, 
-  Point,
-  LayoutConfig 
+  Connection
 } from '../../lib/visualization/GraphEngine';
 import { GitCommit } from '../../types';
 import './GitGraphCanvas.css';
@@ -59,7 +56,6 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
     
     // Create smooth curves for merge connections
     if (type === 'merge' && Math.abs(from.x - to.x) > 10) {
-      const midX = (from.x + to.x) / 2;
       const controlPoint1 = { x: from.x, y: from.y + 10 };
       const controlPoint2 = { x: to.x, y: to.y - 10 };
       
@@ -93,7 +89,7 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
   }, []);
 
   // Render a commit node
-  const renderCommitNode = useCallback((commitNode: CommitNode, index: number) => {
+  const renderCommitNode = useCallback((commitNode: CommitNode, _index: number) => {
     const { commit, position, isSelected, lane } = commitNode;
     const nodeRadius = graphEngine.getConfig().nodeWidth / 2;
     const branchColors = graphEngine.getBranchColors();

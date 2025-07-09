@@ -234,7 +234,7 @@ export class GraphEngine {
 
       // Add connections to parents
       if (commit.parents && commit.parents.length > 0) {
-        commit.parents.forEach((parentHash, parentIndex) => {
+        commit.parents.forEach((parentHash, _parentIndex) => {
           const parentNode = nodes.find(n => n.commit.hash === parentHash);
           if (parentNode) {
             const isMerge = commit.parents.length > 1;

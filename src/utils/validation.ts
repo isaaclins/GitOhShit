@@ -55,7 +55,7 @@ export function isValidBranchName(name: string): boolean {
   // - Cannot start or end with slash
   // - Cannot contain certain characters
   // - Cannot start with dash
-  const invalidChars = /[\s~^:?*\[\]\\]/;
+  const invalidChars = /[\s~^:?*[\]\\]/;
   const startsWithSlash = /^\//;
   const endsWithSlash = /\/$/;
   const startsWithDash = /^-/;
@@ -81,7 +81,7 @@ export function isValidTagName(name: string): boolean {
   
   // Similar to branch names but with some differences
   // Tags can start with 'v' for versions
-  const invalidChars = /[\s~^:?*\[\]\\]/;
+  const invalidChars = /[\s~^:?*[\]\\]/;
   const startsWithSlash = /^\//;
   const endsWithSlash = /\/$/;
   

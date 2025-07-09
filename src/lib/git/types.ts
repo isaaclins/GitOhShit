@@ -3,7 +3,7 @@
  * These are more specific implementations of the global types
  */
 
-import { GitCommit, GitBranch, GitRepository, GitStatus, GitTag } from '../../types';
+import { GitCommit, GitBranch, GitRepository } from '../../types';
 
 // ===================
 // Raw Git Data Types

@@ -39,23 +39,23 @@ describe('Main Process Module', () => {
     }));
   });
 
-  test('main module loads without errors', () => {
-    expect(() => {
-      require('./main');
+  test('main module loads without errors', async () => {
+    expect(async () => {
+      await import('./main');
     }).not.toThrow();
   });
 
-  test('app ready event listener is registered', () => {
-    const { app } = require('electron');
-    require('./main');
+  test('app ready event listener is registered', async () => {
+    const { app } = await import('electron');
+    await import('./main');
     
     expect(app.on).toHaveBeenCalledWith('ready', expect.any(Function));
   });
 
-  test('IPC handler setup function exists', () => {
+  test('IPC handler setup function exists', async () => {
     // This test verifies the IPC setup code is present
     // Actual IPC testing would require more complex setup
-    const mainModule = require('./main');
+    const mainModule = await import('./main');
     // The main module should export or set up IPC handlers
     // For now, just verify the module loads successfully
     expect(mainModule).toBeDefined();

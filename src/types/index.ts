@@ -200,7 +200,7 @@ export interface GitGraphProps {
   selectedCommits: string[];
   onCommitSelect: (commitHash: string, multi?: boolean) => void;
   onCommitEdit: (commit: GitCommit) => void;
-  onCommitMove: (commitHash: string, targetBranch: string, position: number) => void;
+  _onCommitMove: (commitHash: string, targetBranch: string, position: number) => void;
 }
 
 export interface CommitNodeProps {
@@ -209,8 +209,8 @@ export interface CommitNodeProps {
   highlighted: boolean;
   onClick: (commitHash: string, multi?: boolean) => void;
   onDoubleClick: (commit: GitCommit) => void;
-  onDragStart: (commitHash: string) => void;
-  onDragEnd: (commitHash: string, target: { branch: string; position: number }) => void;
+  _onDragStart: (commitHash: string) => void;
+  _onDragEnd: (commitHash: string, target: { branch: string; position: number }) => void;
 }
 
 export interface EditModalProps {
