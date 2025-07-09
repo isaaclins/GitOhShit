@@ -1,11 +1,9 @@
-import React, { useMemo, useCallback, useRef, useEffect } from 'react';
-import GraphEngine, { 
-  CommitNode, 
-  Connection
-} from '../../lib/visualization/GraphEngine';
-import { GitCommit } from '../../types';
-import { formatCommitHash, formatCommitMessage, formatRelativeTime } from '../../utils/formatters';
+import React, { useRef, useMemo, useCallback, useEffect, useState } from 'react';
 import './GitGraphCanvas.css';
+import { GitCommit } from '../../types';
+import { GraphEngine } from '../../lib/visualization/GraphEngine';
+import { CommitNode, Connection } from '../../lib/visualization/GraphEngine';
+import { formatCommitHash, formatCommitMessage, formatRelativeTime } from '../../utils/formatters';
 
 interface GitGraphCanvasProps {
   commits: GitCommit[];
@@ -15,6 +13,12 @@ interface GitGraphCanvasProps {
   viewMode?: 'linear' | 'tree' | 'timeline';
   className?: string;
   branchFilter?: string | null;
+}
+
+interface Transform {
+  x: number;
+  y: number;
+  scale: number;
 }
 
 const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
@@ -27,7 +31,13 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
   branchFilter,
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const graphEngine = useMemo(() => new GraphEngine(), []);
+  
+  // Pan and zoom state
+  const [transform, setTransform] = useState<Transform>({ x: 0, y: 0, scale: 1 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0, transformX: 0, transformY: 0 });
 
   // Update graph engine configuration when view mode changes
   useEffect(() => {
@@ -38,6 +48,185 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
   const layout = useMemo(() => {
     return graphEngine.calculateLayout(commits, selectedCommits, branchFilter);
   }, [graphEngine, commits, selectedCommits, branchFilter]);
+
+  // Reset transform when layout changes significantly
+  useEffect(() => {
+    if (layout.bounds.width > 0 && layout.bounds.height > 0) {
+      setTransform({ x: 0, y: 0, scale: 1 });
+    }
+  }, [layout.bounds.width, layout.bounds.height, viewMode]);
+
+  // Reset zoom and pan
+  const resetView = useCallback(() => {
+    setTransform({ x: 0, y: 0, scale: 1 });
+  }, []);
+
+  // Fit content to view
+  const fitToView = useCallback(() => {
+    const container = containerRef.current;
+    if (!container || layout.bounds.width === 0 || layout.bounds.height === 0) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const padding = 40;
+    
+    const scaleX = (containerRect.width - padding * 2) / layout.bounds.width;
+    const scaleY = (containerRect.height - padding * 2) / layout.bounds.height;
+    const scale = Math.min(scaleX, scaleY, 1);
+    
+    const centerX = layout.bounds.minX + layout.bounds.width / 2;
+    const centerY = layout.bounds.minY + layout.bounds.height / 2;
+    
+    setTransform({
+      x: containerRect.width / 2 / scale - centerX,
+      y: containerRect.height / 2 / scale - centerY,
+      scale
+    });
+  }, [layout]);
+
+  // Handle mouse wheel for zooming
+  const handleWheel = useCallback((event: React.WheelEvent) => {
+    event.preventDefault();
+    
+    const container = containerRef.current;
+    const svg = svgRef.current;
+    if (!container || !svg) return;
+
+    const rect = svg.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+    
+    // Convert mouse coordinates to SVG coordinates
+    const svgPoint = svg.createSVGPoint();
+    svgPoint.x = mouseX;
+    svgPoint.y = mouseY;
+    const svgCoords = svgPoint.matrixTransform(svg.getScreenCTM()?.inverse());
+    
+    const zoomFactor = event.deltaY > 0 ? 0.9 : 1.1;
+    const newScale = Math.max(0.1, Math.min(5, transform.scale * zoomFactor));
+    
+    // Zoom towards mouse position
+    const newTransformX = svgCoords.x - (svgCoords.x - transform.x) * (newScale / transform.scale);
+    const newTransformY = svgCoords.y - (svgCoords.y - transform.y) * (newScale / transform.scale);
+    
+    setTransform({
+      x: newTransformX,
+      y: newTransformY,
+      scale: newScale
+    });
+  }, [transform]);
+
+  // Handle mouse down for pan start
+  const handleMouseDown = useCallback((event: React.MouseEvent) => {
+    if (event.button !== 0) return; // Only left mouse button
+    
+    event.preventDefault();
+    setIsDragging(true);
+    setDragStart({
+      x: event.clientX,
+      y: event.clientY,
+      transformX: transform.x,
+      transformY: transform.y
+    });
+  }, [transform]);
+
+  // Handle mouse move for panning
+  const handleMouseMove = useCallback((event: React.MouseEvent) => {
+    if (!isDragging) return;
+    
+    const deltaX = (event.clientX - dragStart.x) / transform.scale;
+    const deltaY = (event.clientY - dragStart.y) / transform.scale;
+    
+    setTransform(prev => ({
+      ...prev,
+      x: dragStart.transformX + deltaX,
+      y: dragStart.transformY + deltaY
+    }));
+  }, [isDragging, dragStart, transform.scale]);
+
+  // Handle mouse up for pan end
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  // Add global mouse event listeners for dragging
+  useEffect(() => {
+    if (isDragging) {
+      const handleGlobalMouseMove = (event: MouseEvent) => {
+        const deltaX = (event.clientX - dragStart.x) / transform.scale;
+        const deltaY = (event.clientY - dragStart.y) / transform.scale;
+        
+        setTransform(prev => ({
+          ...prev,
+          x: dragStart.transformX + deltaX,
+          y: dragStart.transformY + deltaY
+        }));
+      };
+
+      const handleGlobalMouseUp = () => {
+        setIsDragging(false);
+      };
+
+      document.addEventListener('mousemove', handleGlobalMouseMove);
+      document.addEventListener('mouseup', handleGlobalMouseUp);
+      
+      return () => {
+        document.removeEventListener('mousemove', handleGlobalMouseMove);
+        document.removeEventListener('mouseup', handleGlobalMouseUp);
+      };
+    }
+  }, [isDragging, dragStart, transform.scale]);
+
+  // Keyboard navigation support
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.target !== document.body && !(event.target as HTMLElement).closest('.git-graph-canvas')) {
+        return;
+      }
+
+      const panStep = 50 / transform.scale;
+      
+      switch (event.key.toLowerCase()) {
+        case 'r':
+          event.preventDefault();
+          resetView();
+          break;
+        case 'f':
+          event.preventDefault();
+          fitToView();
+          break;
+        case '+':
+        case '=':
+          event.preventDefault();
+          setTransform(prev => ({ ...prev, scale: Math.min(5, prev.scale * 1.2) }));
+          break;
+        case '-':
+          event.preventDefault();
+          setTransform(prev => ({ ...prev, scale: Math.max(0.1, prev.scale * 0.8) }));
+          break;
+        case 'arrowup':
+          event.preventDefault();
+          setTransform(prev => ({ ...prev, y: prev.y + panStep }));
+          break;
+        case 'arrowdown':
+          event.preventDefault();
+          setTransform(prev => ({ ...prev, y: prev.y - panStep }));
+          break;
+        case 'arrowleft':
+          event.preventDefault();
+          setTransform(prev => ({ ...prev, x: prev.x + panStep }));
+          break;
+        case 'arrowright':
+          event.preventDefault();
+          setTransform(prev => ({ ...prev, x: prev.x - panStep }));
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [transform.scale, resetView, fitToView]);
 
   // Handle commit click
   const handleCommitClick = useCallback((commitNode: CommitNode) => {
@@ -511,8 +700,8 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
     });
   }, [viewMode, commits, layout, graphEngine]);
 
-  // Calculate viewport dimensions
-  const viewBox = layout.bounds.width > 0 && layout.bounds.height > 0
+  // Calculate viewport dimensions with transform applied
+  const baseViewBox = layout.bounds.width > 0 && layout.bounds.height > 0
     ? `${layout.bounds.minX - 20} ${layout.bounds.minY - 20} ${layout.bounds.width + 40} ${layout.bounds.height + 40}`
     : '0 0 100 100';
 
@@ -520,10 +709,6 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
   const isLinearView = viewMode === 'linear';
   const isTreeView = viewMode === 'tree';
   const isTimelineView = viewMode === 'timeline';
-  
-  // Linear view: enable scrolling, tree view: scale to fit, timeline: enable scrolling with time labels
-  const svgHeight = (isLinearView || isTimelineView) ? layout.bounds.height + 40 : '100%';
-  const preserveAspectRatio = (isLinearView || isTimelineView) ? 'xMidYMin slice' : 'xMidYMin meet';
   
   if (commits.length === 0) {
     return (
@@ -536,13 +721,60 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
   }
 
   return (
-    <div className={`git-graph-canvas ${isLinearView ? 'git-graph-canvas--linear' : ''} ${isTreeView ? 'git-graph-canvas--tree' : ''} ${isTimelineView ? 'git-graph-canvas--timeline' : ''} ${className}`}>
+    <div
+      ref={containerRef}
+      className={`git-graph-canvas ${isLinearView ? 'git-graph-canvas--linear' : ''} ${isTreeView ? 'git-graph-canvas--tree' : ''} ${isTimelineView ? 'git-graph-canvas--timeline' : ''} ${className}`}
+      onWheel={handleWheel}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+    >
+      {/* Navigation Controls */}
+      <div className="git-graph-controls">
+        <button 
+          onClick={resetView}
+          className="git-graph-control-button"
+          title="Reset View (R)"
+        >
+          🔄
+        </button>
+        <button 
+          onClick={fitToView}
+          className="git-graph-control-button"
+          title="Fit to View (F)"
+        >
+          📐
+        </button>
+        <button 
+          onClick={() => setTransform(prev => ({ ...prev, scale: prev.scale * 1.2 }))}
+          className="git-graph-control-button"
+          title="Zoom In (+)"
+        >
+          🔍+
+        </button>
+        <button 
+          onClick={() => setTransform(prev => ({ ...prev, scale: Math.max(0.1, prev.scale * 0.8) }))}
+          className="git-graph-control-button"
+          title="Zoom Out (-)"
+        >
+          🔍-
+        </button>
+        <div className="git-graph-zoom-indicator">
+          {Math.round(transform.scale * 100)}%
+        </div>
+      </div>
+
       <svg
         ref={svgRef}
-        viewBox={viewBox}
-        height={svgHeight}
+        viewBox={baseViewBox}
+        width="100%"
+        height="100%"
         className="git-graph-svg"
-        preserveAspectRatio={preserveAspectRatio}
+        style={{
+          transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
+          transformOrigin: '0 0',
+        }}
       >
         {/* Render connections first (behind nodes) */}
         <g className="git-connections">
@@ -565,7 +797,8 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
             Nodes: {layout.nodes.length} | 
             Connections: {layout.connections.length} | 
             Lanes: {layout.lanes} |
-            View: {viewMode}
+            View: {viewMode} |
+            Zoom: {Math.round(transform.scale * 100)}%
           </small>
         </div>
       )}

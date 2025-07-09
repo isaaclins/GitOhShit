@@ -2,15 +2,16 @@
   width: 100%;
   height: 100%;
   position: relative;
-  overflow: auto;
+  overflow: hidden;
   background-color: var(--bg-primary, #ffffff);
   border: 1px solid var(--border-color, #e5e5e5);
   border-radius: 8px;
+  cursor: grab;
+  user-select: none;
 }
 
 .git-graph-canvas--linear {
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   max-height: 100%;
 }
 
@@ -624,8 +625,7 @@
 } 
 
 .git-graph-canvas--timeline {
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   background: linear-gradient(
     180deg,
     rgba(99, 102, 241, 0.02) 0%,
@@ -822,4 +822,160 @@
   .git-graph-canvas--timeline::-webkit-scrollbar-track {
     background: rgba(31, 41, 55, 0.5);
   }
+} 
+
+/* Navigation Controls */
+.git-graph-controls {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.git-graph-control-button {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 28px;
+  user-select: none;
+}
+
+.git-graph-control-button:hover {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+  transform: scale(1.05);
+}
+
+.git-graph-control-button:active {
+  transform: scale(0.95);
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.git-graph-zoom-indicator {
+  font-size: 11px;
+  font-weight: 500;
+  color: #6b7280;
+  padding: 0 6px;
+  background: rgba(243, 244, 246, 0.8);
+  border-radius: 4px;
+  min-width: 42px;
+  text-align: center;
+  line-height: 24px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Enhanced cursor states */
+.git-graph-canvas:active {
+  cursor: grabbing;
+}
+
+/* Dark mode support for controls */
+@media (prefers-color-scheme: dark) {
+  .git-graph-controls {
+    background: rgba(31, 41, 55, 0.95);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  
+  .git-graph-control-button {
+    background: rgba(55, 65, 81, 0.8);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #e5e7eb;
+  }
+  
+  .git-graph-control-button:hover {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.4);
+  }
+  
+  .git-graph-zoom-indicator {
+    background: rgba(55, 65, 81, 0.8);
+    color: #d1d5db;
+  }
+}
+
+/* Keyboard hints tooltip */
+.git-graph-controls::after {
+  content: 'Keyboard: R (reset), F (fit), +/- (zoom), Arrow keys (pan)';
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  font-size: 11px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 1001;
+}
+
+.git-graph-controls:hover::after {
+  opacity: 1;
+  transition-delay: 1s;
+}
+
+/* Responsive controls */
+@media (max-width: 768px) {
+  .git-graph-controls {
+    top: 8px;
+    right: 8px;
+    padding: 6px;
+    gap: 6px;
+  }
+  
+  .git-graph-control-button {
+    min-width: 28px;
+    height: 24px;
+    padding: 4px 6px;
+    font-size: 11px;
+  }
+  
+  .git-graph-zoom-indicator {
+    font-size: 10px;
+    min-width: 36px;
+    line-height: 20px;
+  }
+  
+  .git-graph-controls::after {
+    display: none;
+  }
+}
+
+/* Smooth transforms */
+.git-graph-svg {
+  transition: transform 0.1s ease-out;
+  will-change: transform;
+}
+
+/* Focus indicators for accessibility */
+.git-graph-control-button:focus {
+  outline: 2px solid #0066cc;
+  outline-offset: 2px;
+}
+
+.git-graph-control-button:focus-visible {
+  outline: 2px solid #0066cc;
+  outline-offset: 2px;
 } 
