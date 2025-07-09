@@ -173,37 +173,40 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
           <g className="git-commit-metadata">
             {/* Commit hash with special commit indicators */}
             <text
-              x={position.x + nodeRadius + 15}
-              y={position.y - 15}
+              x={position.x + nodeRadius + 20}
+              y={position.y - 20}
               className="git-commit-hash"
-              fontSize="12"
-              fill="#666"
-              fontFamily="monospace"
+              fontSize="11"
+              fill="#6b7280"
+              fontFamily="SF Mono, Monaco, Menlo, Ubuntu Mono, monospace"
+              fontWeight="500"
             >
               {commitHash}
-              {isMergeCommit && <tspan fill="#ff6b6b" fontWeight="bold"> [MERGE]</tspan>}
-              {isInitialCommit && <tspan fill="#4ecdc4" fontWeight="bold"> [INITIAL]</tspan>}
+              {isMergeCommit && <tspan fill="#ef4444" fontWeight="700"> [MERGE]</tspan>}
+              {isInitialCommit && <tspan fill="#06b6d4" fontWeight="700"> [INITIAL]</tspan>}
             </text>
             
             {/* Commit message */}
             <text
-              x={position.x + nodeRadius + 15}
-              y={position.y}
+              x={position.x + nodeRadius + 20}
+              y={position.y - 2}
               className="git-commit-message"
-              fontSize="14"
-              fill="#333"
-              fontWeight={isSelected ? 'bold' : 'normal'}
+              fontSize="15"
+              fill="#1f2937"
+              fontWeight={isSelected ? '600' : '500'}
+              fontFamily="-apple-system, BlinkMacSystemFont, Segoe UI, Inter, Roboto, sans-serif"
             >
               {commitMessage}
             </text>
             
             {/* Author and date */}
             <text
-              x={position.x + nodeRadius + 15}
-              y={position.y + 15}
+              x={position.x + nodeRadius + 20}
+              y={position.y + 16}
               className="git-commit-author-date"
-              fontSize="11"
-              fill="#888"
+              fontSize="12"
+              fill="#6b7280"
+              fontFamily="-apple-system, BlinkMacSystemFont, Segoe UI, Inter, Roboto, sans-serif"
             >
               {commit.author.name} • {relativeTime}
             </text>
@@ -211,29 +214,29 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
             {/* Tags display */}
             {isTaggedCommit && (
               <text
-                x={position.x + nodeRadius + 15}
-                y={position.y + 30}
+                x={position.x + nodeRadius + 20}
+                y={position.y + 32}
                 className="git-commit-tags"
                 fontSize="10"
-                fill="#f39c12"
-                fontWeight="bold"
+                fill="#f59e0b"
+                fontWeight="600"
               >
                 🏷️ {commit.tags.slice(0, 2).join(', ')}
                 {commit.tags.length > 2 && ` +${commit.tags.length - 2}`}
               </text>
             )}
             
-            {/* Branch indicators */}
+            {/* Branch indicators - avoid duplicates and limit display */}
             {hasMultipleBranches && (
               <text
-                x={position.x + nodeRadius + 15}
-                y={position.y + (isTaggedCommit ? 45 : 30)}
+                x={position.x + nodeRadius + 20}
+                y={position.y + (isTaggedCommit ? 48 : 32)}
                 className="git-commit-branches"
                 fontSize="10"
                 fill={laneColor}
-                fontWeight="bold"
+                fontWeight="600"
               >
-                📍 {commit.branches.slice(0, 2).join(', ')}
+                📍 {[...new Set(commit.branches)].slice(0, 2).join(', ')}
                 {commit.branches.length > 2 && ` +${commit.branches.length - 2}`}
               </text>
             )}
@@ -246,7 +249,7 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
           {isMergeCommit && '\nType: Merge Commit'}
           {isInitialCommit && '\nType: Initial Commit'}
           {isTaggedCommit && `\nTags: ${commit.tags.join(', ')}`}
-          {hasMultipleBranches && `\nBranches: ${commit.branches.join(', ')}`}
+          {hasMultipleBranches && `\nBranches: ${[...new Set(commit.branches)].join(', ')}`}
         </title>
         
         {/* Selection indicator */}
@@ -268,6 +271,11 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
     ? `${layout.bounds.minX - 20} ${layout.bounds.minY - 20} ${layout.bounds.width + 40} ${layout.bounds.height + 40}`
     : '0 0 100 100';
 
+  // For linear view, we want scrolling instead of scaling
+  const isLinearView = viewMode === 'linear';
+  const svgHeight = isLinearView ? layout.bounds.height + 40 : '100%';
+  const preserveAspectRatio = isLinearView ? 'xMidYMin slice' : 'xMidYMin meet';
+
   if (commits.length === 0) {
     return (
       <div className={`git-graph-canvas git-graph-canvas--empty ${className}`}>
@@ -279,12 +287,13 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
   }
 
   return (
-    <div className={`git-graph-canvas ${className}`}>
+    <div className={`git-graph-canvas ${isLinearView ? 'git-graph-canvas--linear' : ''} ${className}`}>
       <svg
         ref={svgRef}
         viewBox={viewBox}
+        height={svgHeight}
         className="git-graph-svg"
-        preserveAspectRatio="xMidYMin meet"
+        preserveAspectRatio={preserveAspectRatio}
       >
         {/* Render connections first (behind nodes) */}
         <g className="git-connections">

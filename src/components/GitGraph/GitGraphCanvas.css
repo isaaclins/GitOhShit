@@ -8,6 +8,12 @@
   border-radius: 8px;
 }
 
+.git-graph-canvas--linear {
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 100%;
+}
+
 .git-graph-canvas--empty {
   display: flex;
   align-items: center;
@@ -26,6 +32,12 @@
   height: 100%;
   display: block;
   background-color: transparent;
+}
+
+.git-graph-canvas--linear .git-graph-svg {
+  width: 100%;
+  height: auto;
+  min-height: 100%;
 }
 
 /* Git connections (lines between commits) */
@@ -95,117 +107,299 @@
 }
 
 .git-commit-hash {
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  font-size: 12px;
-  fill: var(--text-muted, #666666);
+  font-family: 'SF Mono', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  fill: var(--text-muted, #6b7280);
+  letter-spacing: 0.025em;
 }
 
 .git-commit-message {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 14px;
-  fill: var(--text-primary, #333333);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, sans-serif;
+  font-size: 15px;
   font-weight: 500;
+  fill: var(--text-primary, #1f2937);
+  line-height: 1.4;
 }
 
 .git-commit-node--selected .git-commit-message {
   font-weight: 600;
-  fill: var(--text-primary, #000000);
+  fill: var(--text-primary, #111827);
 }
 
 .git-commit-author-date {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 11px;
-  fill: var(--text-secondary, #888888);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  fill: var(--text-secondary, #6b7280);
+  opacity: 0.85;
 }
 
 .git-commit-branches {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, sans-serif;
   font-size: 10px;
   font-weight: 600;
   opacity: 0.8;
 }
 
-/* Linear view specific styling */
+/* Enhanced linear view styling */
 .git-commit-node--linear {
   transform-origin: center left;
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .git-commit-node--linear:hover {
-  transform: scale(1.02);
+  transform: translateX(4px) scale(1.01);
 }
 
 .git-commit-node--linear:hover .git-commit-metadata text {
   opacity: 1;
+  transition: opacity 0.15s ease;
 }
 
 .git-commit-node--linear:hover .git-commit-message {
   font-weight: 600;
+  fill: var(--text-primary, #111827);
 }
 
+.git-commit-node--linear:hover .git-commit-circle {
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.15));
+  transform: scale(1.08);
+}
+
+/* Improved metadata spacing and layout */
 .git-commit-metadata text {
-  opacity: 0.9;
+  opacity: 0.92;
   transition: all 0.2s ease;
 }
 
-/* Visual hierarchy improvements */
+/* Better visual hierarchy */
 .git-commit-metadata .git-commit-hash {
   letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 .git-commit-metadata .git-commit-message {
-  transition: font-weight 0.2s ease;
-}
-
-/* Better spacing and alignment */
-.git-commit-node--linear .git-commit-metadata {
+  transition: all 0.2s ease;
   dominant-baseline: middle;
 }
 
-/* Improved readability */
+/* Enhanced readability */
 .git-commit-author-date {
-  opacity: 0.8;
+  opacity: 0.75;
+  font-variant-numeric: tabular-nums;
 }
 
 .git-commit-node--selected .git-commit-author-date {
   opacity: 1;
   font-weight: 500;
+  fill: var(--text-secondary, #4b5563);
 }
 
-/* Special commit type indicators */
+/* Modern commit circle styling */
+.git-commit-circle {
+  transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.08));
+}
+
+.git-commit-node:hover .git-commit-circle {
+  filter: drop-shadow(0 3px 12px rgba(0, 0, 0, 0.15));
+  transform: scale(1.1);
+}
+
+.git-commit-node--selected .git-commit-circle {
+  filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.2));
+  stroke-width: 2.5;
+  transform: scale(1.15);
+}
+
+/* Enhanced connections styling */
+.git-connection {
+  opacity: 0.4;
+  transition: opacity 0.2s ease;
+  stroke-width: 1.5;
+}
+
+.git-connection--parent {
+  stroke-dasharray: none;
+  opacity: 0.6;
+}
+
+.git-connection--merge {
+  stroke-dasharray: none;
+  opacity: 0.8;
+  stroke-width: 2;
+}
+
+/* Subtle container enhancements */
+.git-graph-canvas--linear {
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 100%;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+.git-graph-canvas--linear::-webkit-scrollbar {
+  width: 6px;
+}
+
+.git-graph-canvas--linear::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.git-graph-canvas--linear::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
+}
+
+.git-graph-canvas--linear::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.7);
+}
+
+/* Better spacing for linear view */
+.git-graph-canvas--linear .git-commit-node {
+  animation: commitFadeIn 0.3s ease-out backwards;
+}
+
+.git-graph-canvas--linear .git-commit-node:nth-child(even) {
+  animation-delay: 0.05s;
+}
+
+.git-graph-canvas--linear .git-commit-node:nth-child(odd) {
+  animation-delay: 0.1s;
+}
+
+/* Subtle background highlight on hover */
+.git-commit-node--linear:hover::before {
+  content: '';
+  position: absolute;
+  background: rgba(59, 130, 246, 0.04);
+  border-radius: 8px;
+  border-left: 3px solid rgba(59, 130, 246, 0.3);
+  top: -12px;
+  left: -10px;
+  right: -15px;
+  bottom: -12px;
+  z-index: -1;
+  opacity: 0;
+  animation: highlightFadeIn 0.2s ease-out forwards;
+}
+
+@keyframes highlightFadeIn {
+  to { opacity: 1; }
+}
+
+@keyframes commitFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Enhanced visual polish for selected commits */
+.git-commit-node--selected {
+  position: relative;
+}
+
+.git-commit-node--selected::before {
+  content: '';
+  position: absolute;
+  background: rgba(16, 185, 129, 0.08);
+  border-radius: 8px;
+  border-left: 3px solid rgba(16, 185, 129, 0.5);
+  top: -12px;
+  left: -10px;
+  right: -15px;
+  bottom: -12px;
+  z-index: -1;
+}
+
+/* Improved text rendering */
+.git-commit-metadata text {
+  opacity: 0.92;
+  transition: all 0.2s ease;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Better visual separation between metadata elements */
+.git-commit-hash {
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.git-commit-node--linear:hover .git-commit-hash {
+  opacity: 1;
+  fill: var(--text-muted, #4b5563);
+}
+
+/* Enhanced readability improvements */
+.git-commit-message {
+  max-width: 400px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.git-commit-node--linear:hover .git-commit-message {
+  font-weight: 600;
+  fill: var(--text-primary, #111827);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Smooth transitions for all elements */
+.git-commit-node--linear * {
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Enhanced special commit indicators */
 .git-commit-special-indicator {
-  animation: pulse-glow 2s ease-in-out infinite;
+  animation: specialPulse 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 4px currentColor);
 }
 
 .git-commit-type-indicator {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-weight: bold;
+  font-weight: 700;
+  font-size: 9px;
   pointer-events: none;
   user-select: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .git-commit-initial-dot {
-  animation: initial-glow 1.5s ease-in-out infinite;
+  animation: initialGlow 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px #4ecdc4);
 }
 
 .git-commit-tags {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 10px;
   font-weight: 600;
-  fill: var(--tag-color, #f39c12);
+  fill: var(--tag-color, #f59e0b);
+  filter: drop-shadow(0 1px 2px rgba(245, 158, 11, 0.2));
 }
 
-/* Subtle animations for special commits */
-@keyframes pulse-glow {
-  0%, 100% { opacity: 0.4; }
+/* Refined animations */
+@keyframes specialPulse {
+  0%, 100% { opacity: 0.3; }
   50% { opacity: 0.8; }
 }
 
-@keyframes initial-glow {
-  0%, 100% { opacity: 0.7; }
+@keyframes initialGlow {
+  0%, 100% { opacity: 0.6; }
   50% { opacity: 1; }
 }
 
-/* Hover effects for special commits */
+/* Hover improvements */
 .git-commit-node:hover .git-commit-special-indicator {
   opacity: 1;
   animation: none;
@@ -214,6 +408,7 @@
 .git-commit-node:hover .git-commit-initial-dot {
   opacity: 1;
   animation: none;
+  filter: drop-shadow(0 0 8px #4ecdc4);
 }
 
 /* Debug info */

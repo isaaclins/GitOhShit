@@ -147,9 +147,11 @@ export class GraphEngine {
     
     // Center the commits horizontally for better visual balance
     const centerX = this.config.laneWidth * 3;
+    // Increased spacing for better readability in linear view
+    const linearVerticalSpacing = this.config.verticalSpacing * 1.8;
     
     linearCommits.forEach((commit, index) => {
-      const y = index * this.config.verticalSpacing + this.config.nodeHeight;
+      const y = index * linearVerticalSpacing + this.config.nodeHeight;
       const x = centerX;
       
       const node: CommitNode = {
@@ -169,7 +171,7 @@ export class GraphEngine {
           // Find the parent node in our linearCommits
           const parentNodeIndex = linearCommits.findIndex(c => c.hash === parentHash);
           if (parentNodeIndex !== -1 && parentNodeIndex < index) {
-            const parentY = parentNodeIndex * this.config.verticalSpacing + this.config.nodeHeight;
+            const parentY = parentNodeIndex * linearVerticalSpacing + this.config.nodeHeight;
             
             const connection: Connection = {
               from: { x, y: parentY + this.config.nodeHeight / 2 },
@@ -185,7 +187,7 @@ export class GraphEngine {
     });
 
     // Calculate bounds with better proportions (more width for metadata in linear view)
-    const totalHeight = linearCommits.length * this.config.verticalSpacing + this.config.nodeHeight * 2;
+    const totalHeight = linearCommits.length * linearVerticalSpacing + this.config.nodeHeight * 3;
     const totalWidth = this.config.laneWidth * 15; // Much wider to accommodate commit metadata
     
     return {
