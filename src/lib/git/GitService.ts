@@ -65,6 +65,7 @@ export class GitService {
           message: '%s',
           body: '%b',
           refs: '%D',
+          parents: '%P', // Add parent hashes
         }
       });
 
@@ -84,10 +85,10 @@ export class GitService {
         message: commit.message,
         summary: commit.message,
         body: commit.body,
-        parents: [], // TODO: Parse parent commits
-        refs: commit.refs ? commit.refs.split(', ') : [],
-        tags: [], // TODO: Parse tags
-        branches: [], // TODO: Parse branches
+        parents: commit.parents ? commit.parents.split(' ').filter((p: string) => p.length > 0) : [],
+        refs: commit.refs ? commit.refs.split(', ').filter((r: string) => r.length > 0) : [],
+        tags: commit.refs ? this.parseTagsFromRefs(commit.refs) : [],
+        branches: commit.refs ? this.parseBranchesFromRefs(commit.refs) : []
       }));
 
       return {
@@ -173,6 +174,37 @@ export class GitService {
   static async openRepository(path: string): Promise<GitRepository> {
     const service = new GitService({ repositoryPath: path });
     return await service.getRepository();
+  }
+
+  /**
+   * Parse tags from Git refs string
+   */
+  private parseTagsFromRefs(refs: string): string[] {
+    if (!refs) return [];
+    
+    return refs.split(', ')
+      .filter(ref => ref.startsWith('tag: '))
+      .map(ref => ref.replace('tag: ', '').trim())
+      .filter(tag => tag.length > 0);
+  }
+
+  /**
+   * Parse branches from Git refs string
+   */
+  private parseBranchesFromRefs(refs: string): string[] {
+    if (!refs) return [];
+    
+    return refs.split(', ')
+      .filter(ref => !ref.startsWith('tag: ') && ref.trim().length > 0)
+      .map(ref => {
+        // Remove origin/ prefix for remote branches
+        if (ref.startsWith('origin/')) {
+          return ref.replace('origin/', '');
+        }
+        return ref.trim();
+      })
+      .filter((branch, index, array) => array.indexOf(branch) === index) // Remove duplicates
+      .filter(branch => branch.length > 0);
   }
 
   /**
