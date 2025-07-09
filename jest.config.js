@@ -17,7 +17,8 @@ module.exports = {
     '^@/hooks/(.*)$': '<rootDir>/src/hooks/$1',
     '^@/utils/(.*)$': '<rootDir>/src/utils/$1',
     '^@/types/(.*)$': '<rootDir>/src/types/$1',
-    '^@/contexts/(.*)$': '<rootDir>/src/contexts/$1'
+    '^@/contexts/(.*)$': '<rootDir>/src/contexts/$1',
+    '\\.(css|less|scss|sass)$': 'identity-obj-proxy'
   },
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',

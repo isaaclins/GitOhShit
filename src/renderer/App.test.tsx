@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import App from './App';
+import App from './app';
 
 // Mock the electronAPI
 const mockElectronAPI = {
@@ -183,14 +183,14 @@ describe('App Component', () => {
     });
     
     await waitFor(() => {
-      expect(screen.getByText('Mode: Beginner')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Advanced Mode' })).toBeInTheDocument();
     });
     
     // Switch to advanced mode
     await act(async () => {
       await user.click(screen.getByRole('button', { name: 'Advanced Mode' }));
     });
-    expect(screen.getByText('Mode: Advanced')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Beginner Mode' })).toBeInTheDocument();
   });
 
   test('sets up electron menu listeners on mount', () => {
@@ -215,7 +215,7 @@ describe('App Component', () => {
       await user.click(openButton);
     });
     
-    expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to open repository:', expect.any(Error));
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Error opening repository:', expect.any(Error));
     
     consoleErrorSpy.mockRestore();
   });
