@@ -24,7 +24,7 @@ const createWindow = (): void => {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
     },
-    titleBarStyle: 'hiddenInset',
+    titleBarStyle: 'hidden',
     show: false, // Don't show until ready-to-show
   });
 

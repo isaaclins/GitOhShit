@@ -8,16 +8,26 @@
   overflow: hidden;
 }
 
+/* Traffic Lights Area */
+.app-traffic-lights-area {
+  height: 28px;
+  background: #2d2d2d;
+  flex-shrink: 0;
+  -webkit-app-region: drag;
+}
+
 /* Header */
 .app-header {
   flex-shrink: 0;
-  padding: 16px 20px;
+  padding: 8px 16px;
   background: #2d2d2d;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   justify-content: space-between;
   z-index: 20;
+  -webkit-app-region: drag;
+  min-height: 44px;
 }
 
 .app-header-main {
@@ -25,13 +35,18 @@
   align-items: center;
   gap: 16px;
   flex: 1;
+  height: 100%;
 }
 
 .app-title {
   margin: 0;
   font-size: 20px;
-  font-weight: 600;
-  color: #f3f4f6;
+  font-weight: bold;
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  color: #ffffff;
+  text-align: left;
+  line-height: 1.2;
+  vertical-align: middle;
 }
 
 .app-view-label {
@@ -71,6 +86,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  -webkit-app-region: no-drag;
 }
 
 .app-selected-commit {
@@ -82,6 +98,7 @@
   background: #1f2937;
   border-radius: 6px;
   border: 1px solid #374151;
+  -webkit-app-region: no-drag;
 }
 
 .app-selected-commit-label {
@@ -122,6 +139,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  -webkit-app-region: no-drag;
 }
 
 .app-action-button:hover:not(:disabled) {
@@ -179,6 +197,7 @@
   padding: 2px;
   opacity: 0.8;
   transition: opacity 0.2s ease;
+  -webkit-app-region: no-drag;
 }
 
 .app-error-close:hover {
@@ -233,6 +252,7 @@
   font-weight: 600;
   transition: all 0.2s ease;
   margin-bottom: 16px;
+  -webkit-app-region: no-drag;
 }
 
 .app-welcome-button:hover:not(:disabled) {

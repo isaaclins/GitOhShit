@@ -1,0 +1,76 @@
+---
+alwaysApply: true
+description: Git-O-Shit automated release workflow using Git aliases
+---
+
+# Git-O-Shit Automated Release Workflow
+
+## Quick Release Commands
+
+### For releases with commit message:
+
+```bash
+git release "fix: resolve memory leak in commit parsing"
+git release "feat: add dark mode support"
+git release "docs: update installation guide"
+```
+
+### For just version bumps (when you already committed):
+
+```bash
+git patch  # Bug fixes (1.0.1 → 1.0.2)
+git minor  # Features (1.0.1 → 1.1.0)
+git major  # Breaking (1.0.1 → 2.0.0)
+```
+
+## How These Aliases Work
+
+### `git release "message"`
+
+Automatically:
+
+1. Stages all changes (`git add .`)
+2. Commits with your message (`git commit -m "$1"`)
+3. Bumps patch version (`npm version patch`)
+4. Pushes to main (`git push origin main`)
+5. Pushes tags (`git push origin --tags`)
+
+### `git patch/minor/major`
+
+Automatically:
+
+1. Bumps the specified version (`npm version patch/minor/major`)
+2. Pushes to main (`git push origin main`)
+3. Pushes tags (`git push origin --tags`)
+
+## Alias Definitions
+
+These aliases were created with:
+
+```bash
+git config --global alias.release '!f() { git add . && git commit -m "$1" && npm version patch && git push origin main && git push origin --tags; }; f'
+
+git config --global alias.major '!npm version major && git push origin main && git push origin --tags'
+
+git config --global alias.minor '!npm version minor && git push origin main && git push origin --tags'
+
+git config --global alias.patch '!npm version patch && git push origin main && git push origin --tags'
+```
+
+## Commit Message Standards
+
+Use conventional commit format:
+
+- `feat:` - New features
+- `fix:` - Bug fixes
+- `refactor:` - Code refactoring
+- `test:` - Adding/updating tests
+- `docs:` - Documentation changes
+- `chore:` - Maintenance tasks
+- `ci:` - CI/CD changes
+
+## Notes
+
+- GitHub Actions will automatically trigger on pushed tags
+- Always test locally before using `git release`
+- Use `git patch/minor/major` when you've already committed changes separately

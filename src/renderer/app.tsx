@@ -109,6 +109,8 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="app-main-content">
+      {/* Traffic lights area */}
+      <div className="app-traffic-lights-area"></div>
       {/* Header with title and repository info */}
       <div className="app-header">
         <div className="app-header-main">
@@ -119,14 +121,7 @@ const AppContent: React.FC = () => {
               <span className="app-repo-branch">📍 {state.repository.currentBranch}</span>
               <span className="app-repo-commits">📝 {state.commits.length} commits</span>
             </div>
-          ) : (
-            <span className="app-view-label">
-              {state.currentView === 'linear' && 'Linear View'}
-              {state.currentView === 'tree' && 'Tree View'}
-              {state.currentView === 'timeline' && 'Timeline View'}
-              {state.currentView === 'tabs' && 'Commit Browser'}
-            </span>
-          )}
+          ) : null}
         </div>
 
         <div className="app-header-actions">
