@@ -1,6 +1,6 @@
 {
   "name": "git-o-shit",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A desktop application to visualize and edit Git repository history",
   "main": "dist/main/main.js",
   "scripts": {
