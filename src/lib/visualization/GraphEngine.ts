@@ -94,11 +94,11 @@ export class GraphEngine {
 
   constructor(config: Partial<LayoutConfig> = {}) {
     this.config = {
-      nodeWidth: 12,
-      nodeHeight: 12,
-      horizontalSpacing: 60,
-      verticalSpacing: 40,
-      laneWidth: 20,
+      nodeWidth: 16,
+      nodeHeight: 16,
+      horizontalSpacing: 80,
+      verticalSpacing: 50,
+      laneWidth: 40,
       maxLanes: 10,
       viewMode: 'linear',
       ...config,
@@ -137,9 +137,12 @@ export class GraphEngine {
     const nodes: CommitNode[] = [];
     const connections: Connection[] = [];
     
+    // Center the commits horizontally for better visual balance
+    const centerX = this.config.laneWidth * 3; // More space on both sides
+    
     commits.forEach((commit, index) => {
-      const y = index * this.config.verticalSpacing;
-      const x = this.config.laneWidth;
+      const y = index * this.config.verticalSpacing + this.config.nodeHeight; // Add padding at top
+      const x = centerX;
       
       const node: CommitNode = {
         commit,
@@ -154,9 +157,10 @@ export class GraphEngine {
 
       // Add connection to previous commit (parent)
       if (index > 0) {
+        const prevY = (index - 1) * this.config.verticalSpacing + this.config.nodeHeight;
         const connection: Connection = {
-          from: { x, y: y - this.config.verticalSpacing + this.config.nodeHeight },
-          to: { x, y: y },
+          from: { x, y: prevY + this.config.nodeHeight / 2 },
+          to: { x, y: y - this.config.nodeHeight / 2 },
           type: 'parent',
           color: this.branchColors[0],
           lane: 0,
@@ -165,19 +169,20 @@ export class GraphEngine {
       }
     });
 
-    const height = Math.max(0, (commits.length - 1) * this.config.verticalSpacing + this.config.nodeHeight);
-    const width = this.config.laneWidth * 2;
-
+    // Calculate bounds with better proportions
+    const totalHeight = commits.length * this.config.verticalSpacing + this.config.nodeHeight * 2; // Add padding
+    const totalWidth = this.config.laneWidth * 6; // Much wider for better aspect ratio
+    
     return {
       nodes,
       connections,
       bounds: {
-        width,
-        height,
+        width: totalWidth,
+        height: totalHeight,
         minX: 0,
-        maxX: width,
+        maxX: totalWidth,
         minY: 0,
-        maxY: height,
+        maxY: totalHeight,
       },
       lanes: 1,
     };
