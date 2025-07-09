@@ -10,7 +10,7 @@ const AppContent: React.FC = () => {
   const handleOpenRepository = async () => {
     actions.setLoading(true);
     actions.setError(null);
-    
+
     try {
       const path = await window.electronAPI.selectDirectory();
       if (!path) {
@@ -31,13 +31,17 @@ const AppContent: React.FC = () => {
       actions.setRepository(repository);
 
       // Load commit history
-      const commits = await window.electronAPI.getCommits(path, { maxCount: 50 });
+      const commits = await window.electronAPI.getCommits(path, {
+        maxCount: 50,
+      });
       actions.setCommits(commits);
 
       actions.setLoading(false);
     } catch (error) {
       console.error('Error opening repository:', error);
-      actions.setError(`Failed to open repository: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      actions.setError(
+        `Failed to open repository: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
       actions.setLoading(false);
     }
   };
@@ -109,39 +113,42 @@ const AppContent: React.FC = () => {
             A visual Git history editor that helps you fix your git mistakes
           </span>
         </div>
-        
+
         <div style={styles.headerControls}>
-          <button 
-            style={styles.modeToggle} 
-            onClick={toggleMode}
-          >
+          <button style={styles.modeToggle} onClick={toggleMode}>
             {state.mode === 'beginner' ? 'Advanced Mode' : 'Beginner Mode'}
           </button>
 
           {state.repository && (
             <div style={styles.viewControls}>
-              <button 
+              <button
                 style={{
                   ...styles.viewButton,
-                  ...(state.currentView === 'linear' ? styles.viewButtonActive : {})
+                  ...(state.currentView === 'linear'
+                    ? styles.viewButtonActive
+                    : {}),
                 }}
                 onClick={() => toggleView('linear')}
               >
                 Linear
               </button>
-              <button 
+              <button
                 style={{
                   ...styles.viewButton,
-                  ...(state.currentView === 'tree' ? styles.viewButtonActive : {})
+                  ...(state.currentView === 'tree'
+                    ? styles.viewButtonActive
+                    : {}),
                 }}
                 onClick={() => toggleView('tree')}
               >
                 Tree
               </button>
-              <button 
+              <button
                 style={{
                   ...styles.viewButton,
-                  ...(state.currentView === 'timeline' ? styles.viewButtonActive : {})
+                  ...(state.currentView === 'timeline'
+                    ? styles.viewButtonActive
+                    : {}),
                 }}
                 onClick={() => toggleView('timeline')}
               >
@@ -156,7 +163,7 @@ const AppContent: React.FC = () => {
       {state.error && (
         <div style={styles.errorBanner}>
           <span>⚠️ {state.error}</span>
-          <button 
+          <button
             style={styles.errorClose}
             onClick={() => actions.setError(null)}
           >
@@ -172,17 +179,20 @@ const AppContent: React.FC = () => {
             <div style={styles.welcomeContent}>
               <h2 style={styles.welcomeTitle}>Welcome to Git-O-Shit</h2>
               <p style={styles.welcomeDescription}>
-                A visual Git history editor that helps you fix your git mistakes.
+                A visual Git history editor that helps you fix your git
+                mistakes.
               </p>
-              <button 
+              <button
                 style={{
                   ...styles.openButton,
-                  ...(state.isLoading ? styles.openButtonLoading : {})
+                  ...(state.isLoading ? styles.openButtonLoading : {}),
                 }}
                 onClick={handleOpenRepository}
                 disabled={state.isLoading}
               >
-                {state.isLoading ? 'Loading Git Repository...' : 'Open Repository'}
+                {state.isLoading
+                  ? 'Loading Git Repository...'
+                  : 'Open Repository'}
               </button>
               <p style={styles.helpText}>
                 Or use Cmd+O (Ctrl+O on Windows/Linux) to open a repository
@@ -195,7 +205,7 @@ const AppContent: React.FC = () => {
             <div style={styles.repositoryInfo}>
               <div style={styles.repoHeader}>
                 <h3 style={styles.repoName}>{state.repository.name}</h3>
-                <button 
+                <button
                   style={styles.closeRepoButton}
                   onClick={handleCloseRepository}
                   title="Close Repository"
@@ -203,7 +213,7 @@ const AppContent: React.FC = () => {
                   ✕
                 </button>
               </div>
-              
+
               <div style={styles.repoDetails}>
                 <span style={styles.repoPath}>{state.repository.path}</span>
                 <span style={styles.repoBranch}>
@@ -217,28 +227,39 @@ const AppContent: React.FC = () => {
               {state.repository.status && (
                 <div style={styles.repoStatus}>
                   {state.repository.status.ahead > 0 && (
-                    <span style={styles.statusAhead}>↑{state.repository.status.ahead}</span>
+                    <span style={styles.statusAhead}>
+                      ↑{state.repository.status.ahead}
+                    </span>
                   )}
                   {state.repository.status.behind > 0 && (
-                    <span style={styles.statusBehind}>↓{state.repository.status.behind}</span>
+                    <span style={styles.statusBehind}>
+                      ↓{state.repository.status.behind}
+                    </span>
                   )}
                   {state.repository.status.modified.length > 0 && (
-                    <span style={styles.statusModified}>M{state.repository.status.modified.length}</span>
+                    <span style={styles.statusModified}>
+                      M{state.repository.status.modified.length}
+                    </span>
                   )}
                   {state.repository.status.staged.length > 0 && (
-                    <span style={styles.statusStaged}>S{state.repository.status.staged.length}</span>
+                    <span style={styles.statusStaged}>
+                      S{state.repository.status.staged.length}
+                    </span>
                   )}
                 </div>
               )}
             </div>
-            
+
             {/* Git Visualization */}
             <div style={styles.gitVisualization}>
               <div style={styles.viewHeader}>
-                <h4 style={styles.viewTitle}>Git History ({state.currentView} view)</h4>
+                <h4 style={styles.viewTitle}>
+                  Git History ({state.currentView} view)
+                </h4>
                 {state.selectedCommits.length > 0 && (
                   <span style={styles.selectionInfo}>
-                    {state.selectedCommits.length} commit{state.selectedCommits.length > 1 ? 's' : ''} selected
+                    {state.selectedCommits.length} commit
+                    {state.selectedCommits.length > 1 ? 's' : ''} selected
                   </span>
                 )}
               </div>
@@ -505,4 +526,4 @@ const container = document.getElementById('root');
 if (container) {
   const root = createRoot(container);
   root.render(<App />);
-} 
+}
