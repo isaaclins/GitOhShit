@@ -16,68 +16,14 @@ on:
         type: boolean
         default: true
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
-  prepare:
-    name: Prepare Release
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.version.outputs.VERSION }}
-      tag: ${{ steps.version.outputs.TAG }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Determine version
-        id: version
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VERSION="v${{ github.event.inputs.version }}"
-          else
-            VERSION="${GITHUB_REF#refs/tags/}"
-          fi
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          echo "TAG=$VERSION" >> $GITHUB_OUTPUT
-          echo "Release version: $VERSION"
-
-      - name: Update package.json version (manual trigger only)
-        if: github.event_name == 'workflow_dispatch'
-        run: |
-          CURRENT_VERSION=$(node -p "require('./package.json').version")
-          TARGET_VERSION="${{ github.event.inputs.version }}"
-
-          echo "Current version: $CURRENT_VERSION"
-          echo "Target version: $TARGET_VERSION"
-
-          if [ "$CURRENT_VERSION" != "$TARGET_VERSION" ]; then
-            echo "Updating version from $CURRENT_VERSION to $TARGET_VERSION"
-            npm version $TARGET_VERSION --no-git-tag-version
-            git config user.name github-actions
-            git config user.email github-actions@github.com
-            git add package.json package-lock.json
-            git commit -m "chore: bump version to $TARGET_VERSION"
-            git tag v$TARGET_VERSION
-            git push origin main
-            git push origin v$TARGET_VERSION
-          else
-            echo "Version is already $TARGET_VERSION, creating tag only"
-            git config user.name github-actions
-            git config user.email github-actions@github.com
-            
-            # Check if tag already exists
-            if git rev-parse v$TARGET_VERSION >/dev/null 2>&1; then
-              echo "Tag v$TARGET_VERSION already exists"
-            else
-              echo "Creating tag v$TARGET_VERSION"
-              git tag v$TARGET_VERSION
-              git push origin v$TARGET_VERSION
-            fi
-          fi
-
   build:
     name: Build ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
-    needs: prepare
 
     strategy:
       matrix:
@@ -98,14 +44,18 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.prepare.outputs.tag }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
+
+      - name: Update version for manual trigger
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "Updating package.json to version ${{ github.event.inputs.version }}"
+          npm version ${{ github.event.inputs.version }} --no-git-tag-version
 
       - name: Install dependencies
         run: npm ci
@@ -125,14 +75,14 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.config.name }}-${{ needs.prepare.outputs.version }}
+          name: ${{ matrix.config.name }}-${{ github.event.inputs.version || github.ref_name }}
           path: dist/${{ matrix.config.artifact }}
           retention-days: 30
 
   release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: [prepare, build]
+    needs: build
     if: always() && needs.build.result == 'success'
 
     steps:
@@ -147,16 +97,33 @@ jobs:
       - name: Display artifact structure
         run: ls -la artifacts/
 
+      - name: Determine release info
+        id: release_info
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+            TAG="v$VERSION"
+            IS_DRAFT="${{ github.event.inputs.draft }}"
+          else
+            TAG="${{ github.ref_name }}"
+            VERSION="${TAG#v}"
+            IS_DRAFT="false"
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "TAG=$TAG" >> $GITHUB_OUTPUT
+          echo "IS_DRAFT=$IS_DRAFT" >> $GITHUB_OUTPUT
+          echo "Release version: $VERSION, Tag: $TAG, Draft: $IS_DRAFT"
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ needs.prepare.outputs.version }}
-          name: Git-O-Shit ${{ needs.prepare.outputs.version }}
-          draft: ${{ github.event.inputs.draft || false }}
+          tag_name: ${{ steps.release_info.outputs.TAG }}
+          name: Git-O-Shit ${{ steps.release_info.outputs.VERSION }}
+          draft: ${{ steps.release_info.outputs.IS_DRAFT }}
           prerelease: false
           generate_release_notes: true
           body: |
-            ## 🚀 Git-O-Shit ${{ needs.prepare.outputs.version }}
+            ## 🚀 Git-O-Shit ${{ steps.release_info.outputs.VERSION }}
 
             A visual Git history browser that helps you understand your repository.
 
@@ -168,13 +135,13 @@ jobs:
             - **🍎 macOS**: Download the `.dmg` file (drag to Applications folder)
             - **🪟 Windows**: Download the `.exe` file (run installer)
 
-            ### ✨ Auto-Updates
-            The app will automatically check for updates and notify you when new versions are available.
-
             ### 🔧 Installation Notes
             - **Linux**: `chmod +x *.AppImage && ./Git-O-Shit*.AppImage`
             - **macOS**: Open DMG, drag app to Applications, may need to allow in Security & Privacy
             - **Windows**: Run installer as administrator if needed
+
+            ### 🐛 Issues?
+            Report bugs or request features at: https://github.com/isaaclins/GitOhShit/issues
 
           files: |
             artifacts/**/*.AppImage
