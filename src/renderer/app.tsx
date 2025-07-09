@@ -1,7 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { AppStateProvider } from '../contexts/AppStateContext';
-import GitGraph from '../components/GitGraph/GitGraph';
 import CommitTabList from '../components/CommitTabList/CommitTabList';
 import CommitMetadataPanel from '../components/CommitMetadataPanel/CommitMetadataPanel';
 import { useAppState } from '../contexts/AppStateContext';
@@ -20,7 +19,7 @@ const AppContent: React.FC = () => {
     actions.selectCommit(commitHash);
   };
 
-  const handleOpenRepository = async () => {
+  const handleOpenRepository = useCallback(async () => {
     actions.setLoading(true);
     actions.setError(null);
 
@@ -66,11 +65,11 @@ const AppContent: React.FC = () => {
       );
       actions.setLoading(false);
     }
-  };
+  }, [actions]);
 
-  const handleCloseRepository = () => {
+  const handleCloseRepository = useCallback(() => {
     actions.closeRepository();
-  };
+  }, [actions]);
 
   useEffect(() => {
     // Set up menu event listeners
@@ -106,7 +105,7 @@ const AppContent: React.FC = () => {
         window.electronAPI.removeAllListeners('menu-view-timeline');
       }
     };
-  }, []);
+  }, [actions, handleCloseRepository, handleOpenRepository]);
 
   return (
     <div className="app-main-content">

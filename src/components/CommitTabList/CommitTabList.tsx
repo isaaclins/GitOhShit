@@ -89,9 +89,8 @@ const CommitTabList: React.FC<CommitTabListProps> = ({
         <div className="commit-tab-list-content">
           {sortedCommits.map((commit, index) => {
             const isSelected = selectedCommit === commit.hash;
-            const isMergeCommit = commit.parents && commit.parents.length > 1;
-            const isInitialCommit = !commit.parents || commit.parents.length === 0;
-            const hasMultipleBranches = commit.branches && commit.branches.length > 1;
+                const isMergeCommit = commit.parents && commit.parents.length > 1;
+    const isInitialCommit = !commit.parents || commit.parents.length === 0;
             const branchColors = getBranchColors(commit.branches);
 
             return (

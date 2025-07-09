@@ -594,11 +594,11 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
     
     // Group commits and create time labels
     const groups = new Map<string, { commits: typeof sortedCommits, y: number }>();
-    let currentY = layout.bounds.minY + 40;
+    const currentY = layout.bounds.minY + 40;
     const groupSpacing = graphEngine.getConfig().verticalSpacing * 3;
     const nodeSpacing = graphEngine.getConfig().verticalSpacing * 1.5;
     
-    sortedCommits.forEach((commit, index) => {
+    sortedCommits.forEach((commit, _index) => {
       const date = commit.author.date;
       let groupKey: string;
       
@@ -606,11 +606,12 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
         case 'day':
           groupKey = date.toISOString().split('T')[0];
           break;
-        case 'week':
+        case 'week': {
           const weekStart = new Date(date);
           weekStart.setDate(date.getDate() - date.getDay());
           groupKey = weekStart.toISOString().split('T')[0];
           break;
+        }
         case 'month':
           groupKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
           break;
@@ -639,7 +640,7 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
             day: 'numeric'
           });
           break;
-        case 'week':
+        case 'week': {
           const weekEnd = new Date(firstCommit.author.date);
           weekEnd.setDate(weekEnd.getDate() + 6);
           periodLabel = `Week of ${firstCommit.author.date.toLocaleDateString('en-US', {
@@ -651,6 +652,7 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
             year: 'numeric'
           })}`;
           break;
+        }
         case 'month':
           periodLabel = firstCommit.author.date.toLocaleDateString('en-US', {
             year: 'numeric',

@@ -1,7 +1,7 @@
 import React from 'react';
 import './CommitMetadataPanel.css';
 import { GitCommit } from '../../types';
-import { formatCommitHash, formatCommitMessage, formatRelativeTime } from '../../utils/formatters';
+import { formatCommitHash, formatRelativeTime } from '../../utils/formatters';
 
 interface CommitMetadataPanelProps {
   commit: GitCommit | null;

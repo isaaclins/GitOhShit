@@ -440,16 +440,12 @@ export class GraphEngine {
     const groupSpacing = this.config.verticalSpacing * 3; // Extra space between time groups
     const nodeSpacing = this.config.verticalSpacing * 1.5; // Space between nodes in same group
     
-    timeGroups.forEach((group, groupIndex) => {
-      // Add time group label information (stored in lane 0 for rendering)
-      const groupLabelY = currentY - this.config.verticalSpacing;
-      
+    timeGroups.forEach((group, _groupIndex) => {
       // Process commits in this time group
       const groupCommits = group.commits;
       
       // Assign lanes within the group to handle concurrent commits
       const laneAssignments = this.assignTimelineLanes(groupCommits);
-      const maxGroupLane = Math.max(0, ...laneAssignments.values());
       
       groupCommits.forEach((commit, commitIndex) => {
         const assignedLane = laneAssignments.get(commit.hash) || 0;
@@ -558,11 +554,12 @@ export class GraphEngine {
         case 'day':
           groupKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
           break;
-        case 'week':
+        case 'week': {
           const weekStart = new Date(date);
           weekStart.setDate(date.getDate() - date.getDay()); // Start of week
           groupKey = weekStart.toISOString().split('T')[0];
           break;
+        }
         case 'month':
           groupKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
           break;
@@ -577,7 +574,7 @@ export class GraphEngine {
     // Convert to sorted array with period labels
     return Array.from(groups.entries())
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([key, commits]) => {
+      .map(([_key, commits]) => {
         const firstCommit = commits[0];
         const lastCommit = commits[commits.length - 1];
         
@@ -591,7 +588,7 @@ export class GraphEngine {
               day: 'numeric'
             });
             break;
-          case 'week':
+          case 'week': {
             const weekEnd = new Date(firstCommit.author.date);
             weekEnd.setDate(weekEnd.getDate() + 6);
             periodLabel = `Week of ${firstCommit.author.date.toLocaleDateString('en-US', {
@@ -603,6 +600,7 @@ export class GraphEngine {
               year: 'numeric'
             })}`;
             break;
+          }
           case 'month':
             periodLabel = firstCommit.author.date.toLocaleDateString('en-US', {
               year: 'numeric',
