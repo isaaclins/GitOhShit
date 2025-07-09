@@ -16,6 +16,7 @@
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx}\"",
     "package": "electron-builder",
+    "build:electron": "npm run build && electron-builder",
     "dist": "npm run build && electron-builder"
   },
   "repository": {
