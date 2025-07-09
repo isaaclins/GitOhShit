@@ -76,7 +76,7 @@ Based on PRD: `prd-git-o-shit.md`
   - [x] 2.6 Implement commit history parsing and caching
 
 - [ ] 3.0 History Visualization Engine
-  - [ ] 3.1 Implement graph layout algorithm for commit visualization
+  - [x] 3.1 Implement graph layout algorithm for commit visualization
   - [ ] 3.2 Create linear view mode (single branch timeline)
   - [ ] 3.3 Create tree view mode (full branch/merge visualization)
   - [ ] 3.4 Create timeline view mode (chronological organization)

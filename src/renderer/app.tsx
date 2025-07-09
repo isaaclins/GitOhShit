@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { AppStateProvider, useAppState } from '../contexts/AppStateContext';
+import GitGraphCanvas from '../components/GitGraph/GitGraphCanvas';
 import { GitRepository, GitCommit } from '../types';
 
 const AppContent: React.FC = () => {
@@ -51,6 +52,15 @@ const AppContent: React.FC = () => {
 
   const toggleView = (view: 'linear' | 'tree' | 'timeline') => {
     actions.setViewMode(view);
+  };
+
+  const handleCommitSelect = (commitHash: string) => {
+    actions.selectCommit(commitHash);
+  };
+
+  const handleCommitHover = (commitHash: string | null) => {
+    // TODO: implement hover highlighting in future updates
+    console.log('Hovering commit:', commitHash);
   };
 
   useEffect(() => {
@@ -238,28 +248,14 @@ const AppContent: React.FC = () => {
                   <p>Loading commit history...</p>
                 </div>
               ) : (
-                <div style={styles.commitsList}>
-                  {state.commits.map((commit) => (
-                    <div 
-                      key={commit.hash}
-                      style={{
-                        ...styles.commitItem,
-                        ...(state.selectedCommits.includes(commit.hash) ? styles.commitItemSelected : {})
-                      }}
-                      onClick={() => actions.selectCommit(commit.hash)}
-                    >
-                      <div style={styles.commitHash}>{commit.shortHash}</div>
-                      <div style={styles.commitMessage}>{commit.summary}</div>
-                      <div style={styles.commitAuthor}>
-                        {commit.author.name} • {commit.author.date.toLocaleDateString()}
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {state.commits.length === 0 && (
-                    <p style={styles.noCommits}>No commits found in this repository.</p>
-                  )}
-                </div>
+                <GitGraphCanvas
+                  commits={state.commits}
+                  selectedCommits={state.selectedCommits}
+                  onCommitSelect={handleCommitSelect}
+                  onCommitHover={handleCommitHover}
+                  viewMode={state.currentView}
+                  className="git-graph-main"
+                />
               )}
             </div>
           </div>
@@ -476,7 +472,9 @@ const styles = {
   gitVisualization: {
     flex: 1,
     padding: '20px',
-    overflow: 'auto',
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column' as const,
   },
   viewHeader: {
     display: 'flex',
@@ -496,43 +494,6 @@ const styles = {
   loadingCommits: {
     textAlign: 'center' as const,
     marginTop: '100px',
-    color: '#888888',
-  },
-  commitsList: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '8px',
-  },
-  commitItem: {
-    padding: '12px',
-    backgroundColor: '#3e3e3e',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    border: '2px solid transparent',
-    transition: 'all 0.2s ease',
-  },
-  commitItemSelected: {
-    borderColor: '#007acc',
-    backgroundColor: '#1a365d',
-  },
-  commitHash: {
-    fontSize: '12px',
-    color: '#888888',
-    fontFamily: 'monospace',
-    marginBottom: '4px',
-  },
-  commitMessage: {
-    fontSize: '14px',
-    color: '#ffffff',
-    marginBottom: '4px',
-  },
-  commitAuthor: {
-    fontSize: '12px',
-    color: '#888888',
-  },
-  noCommits: {
-    textAlign: 'center' as const,
-    marginTop: '50px',
     color: '#888888',
   },
 };
