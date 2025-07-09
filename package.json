@@ -69,6 +69,7 @@
     "webpack-cli": "^5.1.0"
   },
   "dependencies": {
+    "electron-updater": "^6.6.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "simple-git": "^3.24.0"
@@ -77,8 +78,10 @@
     "appId": "com.gitoshit.app",
     "productName": "Git-O-Shit",
     "directories": {
-      "output": "dist"
+      "output": "dist",
+      "buildResources": "build"
     },
+    "icon": "build/icon",
     "files": [
       "dist/**/*",
       "node_modules/**/*",
@@ -89,6 +92,11 @@
       "provider": "github",
       "owner": "isaaclins",
       "repo": "GitOhShit"
+    },
+    "afterSign": "electron-builder-notarize",
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
     },
     "mac": {
       "category": "public.app-category.developer-tools",

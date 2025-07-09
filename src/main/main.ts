@@ -1,4 +1,5 @@
 import { app, BrowserWindow, Menu, MenuItemConstructorOptions, ipcMain, dialog } from 'electron';
+import { autoUpdater } from 'electron-updater';
 import * as path from 'path';
 import { GitService } from '../lib/git/GitService';
 
@@ -50,10 +51,18 @@ const createWindow = (): void => {
   });
 };
 
+// Configure auto-updater
+autoUpdater.checkForUpdatesAndNotify();
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 app.on('ready', () => {
   createWindow();
+  
+  // Check for updates on startup (only in production)
+  if (!process.env.NODE_ENV || process.env.NODE_ENV === 'production') {
+    autoUpdater.checkForUpdatesAndNotify();
+  }
   
   // Set application menu
   const template: MenuItemConstructorOptions[] = [
@@ -76,6 +85,13 @@ app.on('ready', () => {
             if (mainWindow) {
               mainWindow.webContents.send('menu-close-repository');
             }
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Check for Updates...',
+          click: () => {
+            autoUpdater.checkForUpdatesAndNotify();
           }
         },
         { type: 'separator' },
@@ -222,6 +238,61 @@ app.on('ready', () => {
       throw error;
     }
   });
+});
+
+// Auto-updater event handlers
+autoUpdater.on('checking-for-update', () => {
+  console.log('Checking for update...');
+  if (mainWindow) {
+    mainWindow.webContents.send('update-checking');
+  }
+});
+
+autoUpdater.on('update-available', (info) => {
+  console.log('Update available:', info);
+  if (mainWindow) {
+    mainWindow.webContents.send('update-available', info);
+  }
+});
+
+autoUpdater.on('update-not-available', (info) => {
+  console.log('Update not available:', info);
+  if (mainWindow) {
+    mainWindow.webContents.send('update-not-available', info);
+  }
+});
+
+autoUpdater.on('error', (err) => {
+  console.error('Error in auto-updater:', err);
+  if (mainWindow) {
+    mainWindow.webContents.send('update-error', err.message);
+  }
+});
+
+autoUpdater.on('download-progress', (progressObj) => {
+  let log_message = `Download speed: ${progressObj.bytesPerSecond}`;
+  log_message = log_message + ` - Downloaded ${progressObj.percent}%`;
+  log_message = log_message + ` (${progressObj.transferred}/${progressObj.total})`;
+  console.log(log_message);
+  if (mainWindow) {
+    mainWindow.webContents.send('update-download-progress', progressObj);
+  }
+});
+
+autoUpdater.on('update-downloaded', (info) => {
+  console.log('Update downloaded:', info);
+  if (mainWindow) {
+    mainWindow.webContents.send('update-downloaded', info);
+  }
+});
+
+// IPC handlers for updates
+ipcMain.handle('app-restart-and-install', () => {
+  autoUpdater.quitAndInstall();
+});
+
+ipcMain.handle('app-check-for-updates', () => {
+  autoUpdater.checkForUpdatesAndNotify();
 });
 
 // Quit when all windows are closed, except on macOS.

@@ -4,19 +4,80 @@ on:
   push:
     tags:
       - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 1.2.0)'
+        required: true
+        type: string
+      draft:
+        description: 'Create as draft release'
+        required: false
+        type: boolean
+        default: true
 
 jobs:
-  release:
-    name: Release ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+  prepare:
+    name: Prepare Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.VERSION }}
+      tag: ${{ steps.version.outputs.TAG }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="v${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "TAG=$VERSION" >> $GITHUB_OUTPUT
+          echo "Release version: $VERSION"
+
+      - name: Update package.json version (manual trigger only)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          npm version ${{ github.event.inputs.version }} --no-git-tag-version
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add package.json package-lock.json
+          git commit -m "chore: bump version to ${{ github.event.inputs.version }}"
+          git tag v${{ github.event.inputs.version }}
+          git push origin main
+          git push origin v${{ github.event.inputs.version }}
+
+  build:
+    name: Build ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    needs: prepare
+
+    strategy:
+      matrix:
+        config:
+          - name: Linux
+            os: ubuntu-latest
+            platform: linux
+            artifact: '*.AppImage'
+          - name: macOS
+            os: macos-latest
+            platform: mac
+            artifact: '*.dmg'
+          - name: Windows
+            os: windows-latest
+            platform: win
+            artifact: '*.exe'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.tag }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -33,60 +94,69 @@ jobs:
       - name: Build application
         run: npm run build
 
-      - name: Build and publish Electron app (Linux)
-        if: matrix.os == 'ubuntu-latest'
-        run: npm run build:electron -- --linux --publish=always
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and publish Electron app (macOS)
-        if: matrix.os == 'macos-latest'
-        run: npm run build:electron -- --mac --publish=always
+      - name: Build Electron app
+        run: npm run build:electron -- --${{ matrix.config.platform }} --publish=never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
-      - name: Build and publish Electron app (Windows)
-        if: matrix.os == 'windows-latest'
-        run: npm run build:electron -- --win --publish=always
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.config.name }}-${{ needs.prepare.outputs.version }}
+          path: dist/${{ matrix.config.artifact }}
+          retention-days: 30
 
-  create-release:
+  release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: release
+    needs: [prepare, build]
+    if: always() && needs.build.result == 'success'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Extract version from tag
-        id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Display artifact structure
+        run: ls -la artifacts/
 
       - name: Create Release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.prepare.outputs.version }}
+          name: Git-O-Shit ${{ needs.prepare.outputs.version }}
+          draft: ${{ github.event.inputs.draft || false }}
+          prerelease: false
+          generate_release_notes: true
+          body: |
+            ## 🚀 Git-O-Shit ${{ needs.prepare.outputs.version }}
+
+            A visual Git history browser that helps you understand your repository.
+
+            ### 📦 Downloads
+
+            Choose the right version for your operating system:
+
+            - **🐧 Linux**: Download the `.AppImage` file (make executable and run)
+            - **🍎 macOS**: Download the `.dmg` file (drag to Applications folder)
+            - **🪟 Windows**: Download the `.exe` file (run installer)
+
+            ### ✨ Auto-Updates
+            The app will automatically check for updates and notify you when new versions are available.
+
+            ### 🔧 Installation Notes
+            - **Linux**: `chmod +x *.AppImage && ./Git-O-Shit*.AppImage`
+            - **macOS**: Open DMG, drag app to Applications, may need to allow in Security & Privacy
+            - **Windows**: Run installer as administrator if needed
+
+          files: |
+            artifacts/**/*.AppImage
+            artifacts/**/*.dmg  
+            artifacts/**/*.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.version.outputs.VERSION }}
-          release_name: Git-O-Shit ${{ steps.version.outputs.VERSION }}
-          body: |
-            ## What's Changed
-
-            🚀 New release of Git-O-Shit!
-
-            ### Download
-            - **Linux**: Download the `.AppImage` file
-            - **macOS**: Download the `.dmg` file  
-            - **Windows**: Download the `.exe` file
-
-            ### Installation
-            - **Linux**: Make the AppImage executable and run it
-            - **macOS**: Open the DMG and drag the app to Applications
-            - **Windows**: Run the installer executable
-
-            Full changelog: https://github.com/${{ github.repository }}/compare/${{ github.event.before }}...${{ github.sha }}
-          draft: false
-          prerelease: false
