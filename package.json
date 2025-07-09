@@ -1,0 +1,87 @@
+{
+  "name": "git-o-shit",
+  "version": "1.0.0",
+  "description": "A desktop application to visualize and edit Git repository history",
+  "main": "dist/main/main.js",
+  "scripts": {
+    "start": "npm run dev",
+    "build": "webpack --mode production",
+    "build:dev": "webpack --mode development",
+    "dev": "concurrently \"npm run build:dev -- --watch\" \"npm run electron:dev\"",
+    "electron": "electron .",
+    "electron:dev": "wait-on dist/main/main.js && electron .",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx}\"",
+    "package": "electron-builder",
+    "dist": "npm run build && electron-builder"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/isaaclins/GitOhShit.git"
+  },
+  "keywords": ["git", "desktop", "electron", "visualization", "commit-editor"],
+  "author": "Isaac Lins",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/isaaclins/GitOhShit/issues"
+  },
+  "homepage": "https://github.com/isaaclins/GitOhShit#readme",
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.4.0",
+    "@testing-library/react": "^14.3.0",
+    "@testing-library/user-event": "^14.5.0",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "concurrently": "^8.2.0",
+    "css-loader": "^6.8.0",
+    "electron": "^26.0.0",
+    "electron-builder": "^24.6.0",
+    "electron-squirrel-startup": "^1.0.1",
+    "eslint": "^8.45.0",
+    "eslint-plugin-react": "^7.33.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "html-webpack-plugin": "^5.5.3",
+    "jest": "^29.6.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "prettier": "^3.0.0",
+    "style-loader": "^3.3.3",
+    "ts-jest": "^29.1.0",
+    "ts-loader": "^9.4.4",
+    "typescript": "^5.1.0",
+    "wait-on": "^7.0.1",
+    "webpack": "^5.88.0",
+    "webpack-cli": "^5.1.0"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "simple-git": "^3.24.0"
+  },
+  "build": {
+    "appId": "com.gitoshit.app",
+    "productName": "Git-O-Shit",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "node_modules/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  }
+}
