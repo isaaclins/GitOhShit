@@ -2,8 +2,8 @@ import React, { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { AppStateProvider, useAppState } from '../contexts/AppStateContext';
 import { GitCommit, GitBranch } from '../types';
-import GitGraphCanvas from '../components/GitGraph/GitGraphCanvas';
-
+import CommitTabList from '../components/CommitTabList/CommitTabList';
+import CommitMetadataPanel from '../components/CommitMetadataPanel/CommitMetadataPanel';
 
 const AppContent: React.FC = () => {
   const { state, actions } = useAppState();
@@ -91,6 +91,11 @@ const AppContent: React.FC = () => {
     // TODO: implement hover highlighting in future updates
     console.log('Hovering commit:', commitHash);
   };
+
+  // Get the selected commit object for the metadata panel
+  const selectedCommitObject = state.selectedCommit 
+    ? state.commits.find(commit => commit.hash === state.selectedCommit) || null
+    : null;
 
   useEffect(() => {
     // Set up menu event listeners
@@ -247,6 +252,11 @@ const AppContent: React.FC = () => {
                 <span style={styles.repoCommits}>
                   📝 {state.commits.length} commits loaded
                 </span>
+                {state.selectedCommit && (
+                  <span style={styles.selectedCommitInfo}>
+                    👆 Selected: {state.selectedCommit.substring(0, 7)}
+                  </span>
+                )}
               </div>
 
               {/* Branch Filter Selector */}
@@ -297,34 +307,31 @@ const AppContent: React.FC = () => {
               )}
             </div>
 
-            {/* Git Visualization */}
-            <div style={styles.gitVisualization}>
-              <div style={styles.viewHeader}>
-                <h4 style={styles.viewTitle}>
-                  Git History ({state.currentView} view)
-                </h4>
-                {state.selectedCommits.length > 0 && (
-                  <span style={styles.selectionInfo}>
-                    {state.selectedCommits.length} commit
-                    {state.selectedCommits.length > 1 ? 's' : ''} selected
-                  </span>
-                )}
-              </div>
-
+            {/* Vertical Tab Interface */}
+            <div style={styles.tabInterface}>
               {state.isLoading ? (
                 <div style={styles.loadingCommits}>
                   <p>Loading commit history...</p>
                 </div>
               ) : (
-                <GitGraphCanvas
-                  commits={state.commits}
-                  selectedCommits={state.selectedCommits}
-                  onCommitSelect={handleCommitSelect}
-                  onCommitHover={handleCommitHover}
-                  viewMode={state.currentView}
-                  branchFilter={state.selectedBranch}
-                  className="git-graph-main"
-                />
+                <>
+                  {/* Left Panel - Commit Tab List */}
+                  <div style={styles.leftPanel}>
+                    <CommitTabList
+                      commits={state.commits}
+                      selectedCommit={state.selectedCommit}
+                      onCommitSelect={handleCommitSelect}
+                      branchFilter={state.selectedBranch}
+                    />
+                  </div>
+
+                  {/* Right Panel - Commit Metadata */}
+                  <div style={styles.rightPanel}>
+                    <CommitMetadataPanel
+                      commit={selectedCommitObject}
+                    />
+                  </div>
+                </>
               )}
             </div>
           </div>
@@ -513,6 +520,10 @@ const styles = {
   repoCommits: {
     color: '#7fb069',
   },
+  selectedCommitInfo: {
+    color: '#f59e0b',
+    fontWeight: '500',
+  },
   repoStatus: {
     display: 'flex',
     gap: '8px',
@@ -538,31 +549,27 @@ const styles = {
     backgroundColor: '#58a6ff',
     borderRadius: '2px',
   },
-  gitVisualization: {
+  tabInterface: {
     flex: 1,
-    padding: '20px',
+    display: 'flex',
     overflow: 'hidden',
+  },
+  leftPanel: {
+    width: '380px',
+    flexShrink: 0,
     display: 'flex',
     flexDirection: 'column' as const,
   },
-  viewHeader: {
+  rightPanel: {
+    flex: 1,
     display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: '16px',
-  },
-  viewTitle: {
-    margin: 0,
-    fontSize: '16px',
-    color: '#ffffff',
-  },
-  selectionInfo: {
-    fontSize: '14px',
-    color: '#888888',
+    flexDirection: 'column' as const,
   },
   loadingCommits: {
-    textAlign: 'center' as const,
-    marginTop: '100px',
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     color: '#888888',
   },
   branchFilter: {

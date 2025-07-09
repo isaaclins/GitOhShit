@@ -130,7 +130,8 @@ export type AppMode = 'beginner' | 'advanced';
 export interface AppState {
   repository: GitRepository | null;
   commits: GitCommit[];
-  selectedCommits: string[];
+  selectedCommits: string[]; // Keep for backward compatibility
+  selectedCommit: string | null; // Single commit selection for vertical tab interface
   currentView: ViewMode;
   mode: AppMode;
   isLoading: boolean;

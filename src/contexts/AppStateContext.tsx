@@ -9,9 +9,7 @@ type AppAction =
   | { type: 'SET_REPOSITORY'; payload: GitRepository }
   | { type: 'CLOSE_REPOSITORY' }
   | { type: 'SET_COMMITS'; payload: GitCommit[] }
-  | { type: 'SET_SELECTED_COMMITS'; payload: string[] }
-  | { type: 'ADD_SELECTED_COMMIT'; payload: string }
-  | { type: 'REMOVE_SELECTED_COMMIT'; payload: string }
+  | { type: 'SET_SELECTED_COMMIT'; payload: string | null }
   | { type: 'CLEAR_SELECTION' }
   | { type: 'SET_VIEW_MODE'; payload: ViewMode }
   | { type: 'SET_APP_MODE'; payload: AppMode }
@@ -28,7 +26,8 @@ type AppAction =
 const initialState: AppState = {
   repository: null,
   commits: [],
-  selectedCommits: [],
+  selectedCommits: [], // Keep for backward compatibility but will use selectedCommit for single selection
+  selectedCommit: null, // New single selection field
   currentView: 'linear',
   mode: 'beginner',
   isLoading: false,
@@ -58,6 +57,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         repository: null,
         commits: [],
         selectedCommits: [],
+        selectedCommit: null,
         error: null,
       };
 
@@ -66,33 +66,21 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ...state,
         commits: action.payload,
         selectedCommits: [], // Clear selection when commits change
+        selectedCommit: null,
       };
 
-    case 'SET_SELECTED_COMMITS':
+    case 'SET_SELECTED_COMMIT':
       return {
         ...state,
-        selectedCommits: action.payload,
-      };
-
-    case 'ADD_SELECTED_COMMIT':
-      if (state.selectedCommits.includes(action.payload)) {
-        return state; // Already selected
-      }
-      return {
-        ...state,
-        selectedCommits: [...state.selectedCommits, action.payload],
-      };
-
-    case 'REMOVE_SELECTED_COMMIT':
-      return {
-        ...state,
-        selectedCommits: state.selectedCommits.filter(hash => hash !== action.payload),
+        selectedCommit: action.payload,
+        selectedCommits: action.payload ? [action.payload] : [], // Maintain backward compatibility
       };
 
     case 'CLEAR_SELECTION':
       return {
         ...state,
         selectedCommits: [],
+        selectedCommit: null,
       };
 
     case 'SET_VIEW_MODE':
@@ -151,7 +139,7 @@ interface AppStateContextType {
     setRepository: (repository: GitRepository) => void;
     closeRepository: () => void;
     setCommits: (commits: GitCommit[]) => void;
-    selectCommit: (hash: string, multi?: boolean) => void;
+    selectCommit: (hash: string | null) => void;
     clearSelection: () => void;
     setViewMode: (mode: ViewMode) => void;
     setAppMode: (mode: AppMode) => void;
@@ -190,16 +178,8 @@ export const AppStateProvider: React.FC<AppStateProviderProps> = ({ children }) 
       dispatch({ type: 'SET_COMMITS', payload: commits });
     },
 
-    selectCommit: (hash: string, multi = false) => {
-      if (multi) {
-        if (state.selectedCommits.includes(hash)) {
-          dispatch({ type: 'REMOVE_SELECTED_COMMIT', payload: hash });
-        } else {
-          dispatch({ type: 'ADD_SELECTED_COMMIT', payload: hash });
-        }
-      } else {
-        dispatch({ type: 'SET_SELECTED_COMMITS', payload: [hash] });
-      }
+    selectCommit: (hash: string | null) => {
+      dispatch({ type: 'SET_SELECTED_COMMIT', payload: hash });
     },
 
     clearSelection: () => {
