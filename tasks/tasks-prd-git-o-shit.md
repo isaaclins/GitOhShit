@@ -77,7 +77,7 @@ Based on PRD: `prd-git-o-shit.md`
 
 - [ ] 3.0 History Visualization Engine
   - [x] 3.1 Implement graph layout algorithm for commit visualization
-  - [ ] 3.2 Create linear view mode (single branch timeline)
+  - [x] 3.2 Create linear view mode (single branch timeline)
   - [ ] 3.3 Create tree view mode (full branch/merge visualization)
   - [ ] 3.4 Create timeline view mode (chronological organization)
   - [ ] 3.5 Implement interactive commit nodes with hover/selection states
