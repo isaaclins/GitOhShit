@@ -103,6 +103,12 @@ export interface GitOperationOptions {
 // Git Configuration
 // ===================
 
+export interface GitServiceConfig {
+  repositoryPath: string;
+  credentials?: GitCredentials;
+  config?: GitConfig;
+}
+
 export interface GitConfig {
   'user.name'?: string;
   'user.email'?: string;

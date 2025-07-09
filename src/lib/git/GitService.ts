@@ -109,13 +109,13 @@ export class GitService {
       
       return {
         current: status.current || 'main',
-        tracking: status.tracking,
+        tracking: status.tracking || undefined,
         ahead: status.ahead || 0,
         behind: status.behind || 0,
         created: status.created || [],
         deleted: status.deleted || [],
         modified: status.modified || [],
-        renamed: status.renamed || [],
+        renamed: status.renamed?.map(r => r.to) || [],
         staged: status.staged || [],
         conflicted: status.conflicted || [],
         not_added: status.not_added || [],
@@ -150,6 +150,38 @@ export class GitService {
   setRepositoryPath(path: string): void {
     this.repositoryPath = path;
     this.git = simpleGit(path);
+  }
+
+  // Static utility methods for IPC handlers
+  
+  /**
+   * Static method to validate if a directory is a Git repository
+   */
+  static async validateRepository(path: string): Promise<boolean> {
+    try {
+      const git = simpleGit(path);
+      await git.status();
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * Static method to open a repository and get its information
+   */
+  static async openRepository(path: string): Promise<GitRepository> {
+    const service = new GitService({ repositoryPath: path });
+    return await service.getRepository();
+  }
+
+  /**
+   * Static method to get commits from a repository
+   */
+  static async getCommits(path: string, options?: { maxCount?: number }): Promise<GitCommit[]> {
+    const service = new GitService({ repositoryPath: path });
+    const result = await service.getCommits(options);
+    return result.commits;
   }
 }
 

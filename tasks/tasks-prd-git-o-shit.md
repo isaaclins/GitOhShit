@@ -68,12 +68,12 @@ Based on PRD: `prd-git-o-shit.md`
   - [x] 1.6 Create basic project structure and folder organization
 
 - [ ] 2.0 Git Core Integration & Repository Management
-  - [ ] 2.1 Integrate libgit2 bindings (nodegit or equivalent) for git operations
-  - [ ] 2.2 Implement repository opening and validation functionality
-  - [ ] 2.3 Create git status detection (working directory, staging area, current branch)
+  - [x] 2.1 Integrate libgit2 bindings (simple-git) for git operations
+  - [x] 2.2 Implement repository opening and validation functionality
+  - [x] 2.3 Create git status detection (working directory, staging area, current branch)
   - [ ] 2.4 Implement credential handling using system git configuration
-  - [ ] 2.5 Create core git data models and TypeScript types
-  - [ ] 2.6 Implement commit history parsing and caching
+  - [x] 2.5 Create core git data models and TypeScript types
+  - [x] 2.6 Implement commit history parsing and caching
 
 - [ ] 3.0 History Visualization Engine
   - [ ] 3.1 Implement graph layout algorithm for commit visualization

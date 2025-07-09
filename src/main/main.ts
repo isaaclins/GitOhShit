@@ -1,5 +1,6 @@
 import { app, BrowserWindow, Menu, MenuItemConstructorOptions, ipcMain, dialog } from 'electron';
 import * as path from 'path';
+import { GitService } from '../lib/git/GitService';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -171,6 +172,55 @@ app.on('ready', () => {
     }
 
     return result.filePaths[0];
+  });
+
+  // Git service IPC handlers
+  ipcMain.handle('git-validate-repository', async (_event, repoPath: string) => {
+    try {
+      return await GitService.validateRepository(repoPath);
+    } catch (error) {
+      console.error('Error validating repository:', error);
+      return false;
+    }
+  });
+
+  ipcMain.handle('git-open-repository', async (_event, repoPath: string) => {
+    try {
+      return await GitService.openRepository(repoPath);
+    } catch (error) {
+      console.error('Error opening repository:', error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle('git-get-commits', async (_event, repoPath: string, options?: { maxCount?: number }) => {
+    try {
+      return await GitService.getCommits(repoPath, options);
+    } catch (error) {
+      console.error('Error getting commits:', error);
+      throw error;
+    }
+  });
+
+  // Legacy handler for backward compatibility
+  ipcMain.handle('git-get-commit-history', async (_event, repoPath: string) => {
+    try {
+      return await GitService.getCommits(repoPath, { maxCount: 100 });
+    } catch (error) {
+      console.error('Error getting commit history:', error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle('git-edit-commit', async (_event, repoPath: string, commitHash: string, changes: any) => {
+    try {
+      // TODO: Implement commit editing functionality
+      console.log('Edit commit requested:', { repoPath, commitHash, changes });
+      return false; // Not implemented yet
+    } catch (error) {
+      console.error('Error editing commit:', error);
+      throw error;
+    }
   });
 });
 

@@ -10,7 +10,9 @@ const mockElectronAPI = {
   onMenuViewLinear: jest.fn(),
   onMenuViewTree: jest.fn(),
   onMenuViewTimeline: jest.fn(),
+  validateRepository: jest.fn(),
   openRepository: jest.fn(),
+  getCommits: jest.fn(),
   getCommitHistory: jest.fn(),
   editCommit: jest.fn(),
   selectDirectory: jest.fn(),
@@ -81,7 +83,25 @@ describe('App Component', () => {
   test('displays repository view when repository is selected', async () => {
     const user = userEvent.setup();
     const mockRepoPath = '/path/to/test/repo';
+    const mockRepository = {
+      name: 'test-repo',
+      path: mockRepoPath,
+      currentBranch: 'main',
+      status: { ahead: 0, behind: 0, modified: [], staged: [] }
+    };
+    const mockCommits = [
+      {
+        hash: 'abc123',
+        shortHash: 'abc123',
+        summary: 'Test commit',
+        author: { name: 'Test User', date: new Date() }
+      }
+    ];
+    
     mockElectronAPI.selectDirectory.mockResolvedValue(mockRepoPath);
+    mockElectronAPI.validateRepository.mockResolvedValue(true);
+    mockElectronAPI.openRepository.mockResolvedValue(mockRepository);
+    mockElectronAPI.getCommits.mockResolvedValue(mockCommits);
     
     render(<App />);
     
@@ -99,14 +119,25 @@ describe('App Component', () => {
     expect(screen.getByRole('button', { name: 'Tree' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Timeline' })).toBeInTheDocument();
     
-    // Should show placeholder visualization
-    expect(screen.getByText('Git Visualization - linear view')).toBeInTheDocument();
+    // Should show Git History view
+    expect(screen.getByText('Git History (linear view)')).toBeInTheDocument();
   });
 
   test('switches between view modes', async () => {
     const user = userEvent.setup();
     const mockRepoPath = '/path/to/test/repo';
+    const mockRepository = {
+      name: 'test-repo',
+      path: mockRepoPath,
+      currentBranch: 'main',
+      status: { ahead: 0, behind: 0, modified: [], staged: [] }
+    };
+    const mockCommits = [];
+    
     mockElectronAPI.selectDirectory.mockResolvedValue(mockRepoPath);
+    mockElectronAPI.validateRepository.mockResolvedValue(true);
+    mockElectronAPI.openRepository.mockResolvedValue(mockRepository);
+    mockElectronAPI.getCommits.mockResolvedValue(mockCommits);
     
     render(<App />);
     
@@ -124,19 +155,19 @@ describe('App Component', () => {
     await act(async () => {
       await user.click(screen.getByRole('button', { name: 'Tree' }));
     });
-    expect(screen.getByText('Git Visualization - tree view')).toBeInTheDocument();
+    expect(screen.getByText('Git History (tree view)')).toBeInTheDocument();
     
     // Switch to timeline view
     await act(async () => {
       await user.click(screen.getByRole('button', { name: 'Timeline' }));
     });
-    expect(screen.getByText('Git Visualization - timeline view')).toBeInTheDocument();
+    expect(screen.getByText('Git History (timeline view)')).toBeInTheDocument();
     
     // Switch back to linear view
     await act(async () => {
       await user.click(screen.getByRole('button', { name: 'Linear' }));
     });
-    expect(screen.getByText('Git Visualization - linear view')).toBeInTheDocument();
+    expect(screen.getByText('Git History (linear view)')).toBeInTheDocument();
   });
 
   test('displays mode information in repository view', async () => {

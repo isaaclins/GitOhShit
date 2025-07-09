@@ -9,8 +9,10 @@ interface ElectronAPI {
   onMenuViewTree: (callback: () => void) => void;
   onMenuViewTimeline: (callback: () => void) => void;
   
-  // Git operations (to be implemented)
+  // Git operations
+  validateRepository: (path: string) => Promise<boolean>;
   openRepository: (path: string) => Promise<any>;
+  getCommits: (path: string, options?: { maxCount?: number }) => Promise<any[]>;
   getCommitHistory: (repoPath: string) => Promise<any[]>;
   editCommit: (repoPath: string, commitHash: string, changes: any) => Promise<boolean>;
   
@@ -42,8 +44,14 @@ const electronAPI: ElectronAPI = {
   },
   
   // Git operations
+  validateRepository: (path: string) => {
+    return ipcRenderer.invoke('git-validate-repository', path);
+  },
   openRepository: (path: string) => {
     return ipcRenderer.invoke('git-open-repository', path);
+  },
+  getCommits: (path: string, options?: { maxCount?: number }) => {
+    return ipcRenderer.invoke('git-get-commits', path, options);
   },
   getCommitHistory: (repoPath: string) => {
     return ipcRenderer.invoke('git-get-commit-history', repoPath);
