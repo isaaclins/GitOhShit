@@ -13,19 +13,34 @@ export interface GitCommit {
     name: string;
     email: string;
     date: Date;
+    dateISO?: string;
+    dateRelative?: string;
   };
   committer: {
     name: string;
     email: string;
     date: Date;
+    dateISO?: string;
+    dateRelative?: string;
   };
   message: string;
   summary: string;
   body?: string;
+  rawBody?: string;
+  notes?: string;
+  encoding?: string;
+  tree?: string;
   parents: string[];
   refs: string[];
   tags: string[];
   branches: string[];
+  stats?: {
+    files: number;
+    insertions: number;
+    deletions: number;
+    changedFiles: string[];
+  } | null;
+  signature?: string | null;
 }
 
 export interface GitBranch {

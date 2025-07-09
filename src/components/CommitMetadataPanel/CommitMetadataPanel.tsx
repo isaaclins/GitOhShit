@@ -267,7 +267,25 @@ const CommitMetadataPanel: React.FC<CommitMetadataPanelProps> = ({ commit }) => 
                 <label className="commit-metadata-label">Files Changed</label>
                 <div className="commit-metadata-value">
                   <span className="commit-metadata-stat">
-                    Unknown
+                    {commit.stats ? commit.stats.files : 'N/A'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="commit-metadata-field">
+                <label className="commit-metadata-label">Insertions</label>
+                <div className="commit-metadata-value">
+                  <span className="commit-metadata-stat commit-metadata-stat--insertions">
+                    +{commit.stats ? commit.stats.insertions : 0}
+                  </span>
+                </div>
+              </div>
+
+              <div className="commit-metadata-field">
+                <label className="commit-metadata-label">Deletions</label>
+                <div className="commit-metadata-value">
+                  <span className="commit-metadata-stat commit-metadata-stat--deletions">
+                    -{commit.stats ? commit.stats.deletions : 0}
                   </span>
                 </div>
               </div>
@@ -300,6 +318,138 @@ const CommitMetadataPanel: React.FC<CommitMetadataPanelProps> = ({ commit }) => 
               </div>
             </div>
           </section>
+
+          {/* Technical Details Section */}
+          <section className="commit-metadata-section">
+            <h3 className="commit-metadata-section-title">Technical Details</h3>
+            <div className="commit-metadata-grid">
+              {commit.tree && (
+                <div className="commit-metadata-field">
+                  <label className="commit-metadata-label">Tree Hash</label>
+                  <div className="commit-metadata-value">
+                    <div className="commit-metadata-hash">
+                      <span className="commit-metadata-hash-text">{commit.tree}</span>
+                      <button 
+                        className="commit-metadata-copy-button"
+                        onClick={() => navigator.clipboard.writeText(commit.tree!)}
+                        title="Copy tree hash"
+                      >
+                        📋
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {commit.encoding && (
+                <div className="commit-metadata-field">
+                  <label className="commit-metadata-label">Encoding</label>
+                  <div className="commit-metadata-value">
+                    {commit.encoding}
+                  </div>
+                </div>
+              )}
+
+              {commit.signature && (
+                <div className="commit-metadata-field commit-metadata-field--full">
+                  <label className="commit-metadata-label">GPG Signature</label>
+                  <div className="commit-metadata-value">
+                    <pre className="commit-metadata-signature">{commit.signature}</pre>
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Enhanced Date Information */}
+          <section className="commit-metadata-section">
+            <h3 className="commit-metadata-section-title">Date Information</h3>
+            <div className="commit-metadata-grid">
+              <div className="commit-metadata-field">
+                <label className="commit-metadata-label">Author Date (Relative)</label>
+                <div className="commit-metadata-value">
+                  {commit.author.dateRelative || formatRelativeTime(commit.author.date)}
+                </div>
+              </div>
+
+              <div className="commit-metadata-field">
+                <label className="commit-metadata-label">Author Date (ISO)</label>
+                <div className="commit-metadata-value">
+                  <span className="commit-metadata-iso-date">
+                    {commit.author.dateISO || commit.author.date.toISOString()}
+                  </span>
+                </div>
+              </div>
+
+              {commit.committer && (
+                <>
+                  <div className="commit-metadata-field">
+                    <label className="commit-metadata-label">Committer Date (Relative)</label>
+                    <div className="commit-metadata-value">
+                      {commit.committer.dateRelative || formatRelativeTime(commit.committer.date)}
+                    </div>
+                  </div>
+
+                  <div className="commit-metadata-field">
+                    <label className="commit-metadata-label">Committer Date (ISO)</label>
+                    <div className="commit-metadata-value">
+                      <span className="commit-metadata-iso-date">
+                        {commit.committer.dateISO || commit.committer.date.toISOString()}
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </section>
+
+          {/* Changed Files Section */}
+          {commit.stats && commit.stats.changedFiles && commit.stats.changedFiles.length > 0 && (
+            <section className="commit-metadata-section">
+              <h3 className="commit-metadata-section-title">Changed Files</h3>
+              <div className="commit-metadata-file-list">
+                {commit.stats.changedFiles.map((file, index) => (
+                  <div key={index} className="commit-metadata-file-item">
+                    <span className="commit-metadata-file-path">📁 {file}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Raw Body Section */}
+          {commit.rawBody && commit.rawBody !== commit.message && (
+            <section className="commit-metadata-section">
+              <h3 className="commit-metadata-section-title">Full Commit Message</h3>
+              <div className="commit-metadata-raw-body">
+                <pre className="commit-metadata-raw-body-text">{commit.rawBody}</pre>
+                <button 
+                  className="commit-metadata-copy-button"
+                  onClick={() => navigator.clipboard.writeText(commit.rawBody!)}
+                  title="Copy full message"
+                >
+                  📋
+                </button>
+              </div>
+            </section>
+          )}
+
+          {/* Notes Section */}
+          {commit.notes && (
+            <section className="commit-metadata-section">
+              <h3 className="commit-metadata-section-title">Git Notes</h3>
+              <div className="commit-metadata-notes">
+                <pre className="commit-metadata-notes-text">{commit.notes}</pre>
+                <button 
+                  className="commit-metadata-copy-button"
+                  onClick={() => navigator.clipboard.writeText(commit.notes!)}
+                  title="Copy notes"
+                >
+                  📋
+                </button>
+              </div>
+            </section>
+          )}
 
           {/* Actions Section */}
           <section className="commit-metadata-section">

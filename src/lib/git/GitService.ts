@@ -52,6 +52,8 @@ export class GitService {
   async getCommits(options?: { maxCount?: number }): Promise<GitLogResult> {
     try {
       const log = await this.git.log({
+        '--numstat': null, // Include numerical file statistics
+        '--show-signature': null, // Include GPG signature info if available
         maxCount: options?.maxCount || 100,
         format: {
           hash: '%H',
@@ -59,13 +61,21 @@ export class GitService {
           author: '%an',
           authorEmail: '%ae',
           authorDate: '%ai',
+          authorDateISO: '%aI',
           committer: '%cn',
           committerEmail: '%ce',
           committerDate: '%ci',
+          committerDateISO: '%cI',
           message: '%s',
           body: '%b',
+          notes: '%N',
           refs: '%D',
-          parents: '%P', // Add parent hashes
+          parents: '%P',
+          tree: '%T',
+          encoding: '%e',
+          authorDateRelative: '%ar',
+          committerDateRelative: '%cr',
+          rawBody: '%B',
         }
       });
 
@@ -76,19 +86,29 @@ export class GitService {
           name: commit.author,
           email: commit.authorEmail,
           date: new Date(commit.authorDate),
+          dateISO: commit.authorDateISO,
+          dateRelative: commit.authorDateRelative,
         },
         committer: {
           name: commit.committer,
           email: commit.committerEmail,
           date: new Date(commit.committerDate),
+          dateISO: commit.committerDateISO,
+          dateRelative: commit.committerDateRelative,
         },
         message: commit.message,
         summary: commit.message,
         body: commit.body,
+        rawBody: commit.rawBody,
+        notes: commit.notes,
+        encoding: commit.encoding,
+        tree: commit.tree,
         parents: commit.parents ? commit.parents.split(' ').filter((p: string) => p.length > 0) : [],
         refs: commit.refs ? commit.refs.split(', ').filter((r: string) => r.length > 0) : [],
         tags: commit.refs ? this.parseTagsFromRefs(commit.refs) : [],
-        branches: commit.refs ? this.parseBranchesFromRefs(commit.refs) : []
+        branches: commit.refs ? this.parseBranchesFromRefs(commit.refs) : [],
+        stats: this.parseCommitStats(commit),
+        signature: commit.signature || null,
       }));
 
       return {
@@ -205,6 +225,64 @@ export class GitService {
       })
       .filter((branch, index, array) => array.indexOf(branch) === index) // Remove duplicates
       .filter(branch => branch.length > 0);
+  }
+
+  /**
+   * Parse commit statistics from Git log output
+   */
+  private parseCommitStats(commit: any): { files: number; insertions: number; deletions: number; changedFiles: string[] } | null {
+    try {
+      // Simple-git provides stats in different formats, try to extract what we can
+      let files = 0;
+      let insertions = 0;
+      let deletions = 0;
+      let changedFiles: string[] = [];
+
+      // Check if we have diff stats from simple-git
+      if (commit.diff && commit.diff.files) {
+        files = commit.diff.files.length;
+        changedFiles = commit.diff.files.map((f: any) => f.file || f.path || '');
+        insertions = commit.diff.insertions || 0;
+        deletions = commit.diff.deletions || 0;
+      } else if (commit.numstat) {
+        // Parse from numstat format: "insertions\tdeletions\tfilename"
+        const statLines = commit.numstat.split('\n').filter((line: string) => line.trim());
+        files = statLines.length;
+        
+        statLines.forEach((line: string) => {
+          const parts = line.trim().split('\t');
+          if (parts.length >= 3) {
+            const lineInsertions = parseInt(parts[0]) || 0;
+            const lineDeletions = parseInt(parts[1]) || 0;
+            const filename = parts[2] || '';
+            
+            insertions += lineInsertions;
+            deletions += lineDeletions;
+            if (filename) {
+              changedFiles.push(filename);
+            }
+          }
+        });
+      } else if (commit.stat) {
+        // Fallback: Parse from stat string if available
+        const statLines = commit.stat.split('\n').filter((line: string) => line.trim());
+        files = statLines.length;
+        changedFiles = statLines.map((line: string) => {
+          const parts = line.trim().split(/\s+/);
+          return parts[0] || '';
+        }).filter((f: string) => f);
+      }
+
+      return {
+        files,
+        insertions,
+        deletions,
+        changedFiles: changedFiles.filter((f: string) => f.length > 0)
+      };
+    } catch (error) {
+      // If parsing fails, return null - we'll handle this gracefully in the UI
+      return null;
+    }
   }
 
   /**

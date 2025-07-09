@@ -355,6 +355,117 @@
   font-size: 16px;
 }
 
+.commit-metadata-stat--insertions {
+  color: #22c55e;
+}
+
+.commit-metadata-stat--deletions {
+  color: #ef4444;
+}
+
+/* ISO Date display */
+.commit-metadata-iso-date {
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* GPG Signature */
+.commit-metadata-signature {
+  background: #1f2937;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #374151;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 11px;
+  color: #e5e7eb;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 0;
+  line-height: 1.4;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* Changed Files List */
+.commit-metadata-file-list {
+  padding: 16px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.commit-metadata-file-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  margin-bottom: 4px;
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.commit-metadata-file-item:hover {
+  background: #374151;
+}
+
+.commit-metadata-file-path {
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 13px;
+  color: #e5e7eb;
+  word-break: break-all;
+}
+
+/* Raw Body Display */
+.commit-metadata-raw-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: #1f2937;
+  padding: 16px;
+  border-radius: 6px;
+  border: 1px solid #374151;
+  margin: 16px;
+}
+
+.commit-metadata-raw-body-text {
+  flex: 1;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 13px;
+  color: #e5e7eb;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 0;
+  line-height: 1.5;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Git Notes Display */
+.commit-metadata-notes {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: #1f2937;
+  padding: 16px;
+  border-radius: 6px;
+  border: 1px solid #374151;
+  margin: 16px;
+}
+
+.commit-metadata-notes-text {
+  flex: 1;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 13px;
+  color: #e5e7eb;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 0;
+  line-height: 1.5;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
 /* Actions section */
 .commit-metadata-actions {
   display: flex;
