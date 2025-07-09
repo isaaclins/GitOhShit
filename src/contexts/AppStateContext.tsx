@@ -1,6 +1,115 @@
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 import { AppState, ViewMode, AppMode, GitRepository, GitCommit } from '../types';
 
+// Mock commit data for initial display
+const mockCommits: GitCommit[] = [
+  {
+    hash: 'a1b2c3d4e5f6789012345678901234567890abcd',
+    shortHash: 'a1b2c3d',
+    author: {
+      name: 'John Doe',
+      email: 'john.doe@example.com',
+      date: new Date('2024-01-15T10:30:00Z'),
+    },
+    committer: {
+      name: 'John Doe',
+      email: 'john.doe@example.com',
+      date: new Date('2024-01-15T10:30:00Z'),
+    },
+    message: 'Initial commit\n\nSet up project structure and basic configuration.',
+    summary: 'Initial commit',
+    body: 'Set up project structure and basic configuration.',
+    parents: [],
+    refs: ['HEAD', 'main'],
+    tags: ['v1.0.0'],
+    branches: ['main'],
+  },
+  {
+    hash: 'b2c3d4e5f6789012345678901234567890abcdef',
+    shortHash: 'b2c3d4e',
+    author: {
+      name: 'Jane Smith',
+      email: 'jane.smith@example.com',
+      date: new Date('2024-01-16T14:22:00Z'),
+    },
+    committer: {
+      name: 'Jane Smith',
+      email: 'jane.smith@example.com',
+      date: new Date('2024-01-16T14:22:00Z'),
+    },
+    message: 'Add user authentication\n\nImplemented login and registration functionality with JWT tokens.',
+    summary: 'Add user authentication',
+    body: 'Implemented login and registration functionality with JWT tokens.',
+    parents: ['a1b2c3d4e5f6789012345678901234567890abcd'],
+    refs: [],
+    tags: [],
+    branches: ['main', 'feature/auth'],
+  },
+  {
+    hash: 'c3d4e5f6789012345678901234567890abcdef12',
+    shortHash: 'c3d4e5f',
+    author: {
+      name: 'Bob Wilson',
+      email: 'bob.wilson@example.com',
+      date: new Date('2024-01-17T09:15:00Z'),
+    },
+    committer: {
+      name: 'Bob Wilson',
+      email: 'bob.wilson@example.com',
+      date: new Date('2024-01-17T09:15:00Z'),
+    },
+    message: 'Fix authentication bug\n\nResolved issue with token expiration handling.',
+    summary: 'Fix authentication bug',
+    body: 'Resolved issue with token expiration handling.',
+    parents: ['b2c3d4e5f6789012345678901234567890abcdef'],
+    refs: [],
+    tags: [],
+    branches: ['main'],
+  },
+  {
+    hash: 'd4e5f6789012345678901234567890abcdef1234',
+    shortHash: 'd4e5f67',
+    author: {
+      name: 'Alice Johnson',
+      email: 'alice.johnson@example.com',
+      date: new Date('2024-01-18T16:45:00Z'),
+    },
+    committer: {
+      name: 'Alice Johnson',
+      email: 'alice.johnson@example.com',
+      date: new Date('2024-01-18T16:45:00Z'),
+    },
+    message: 'Merge feature/auth into main\n\nBrought authentication functionality into main branch.',
+    summary: 'Merge feature/auth into main',
+    body: 'Brought authentication functionality into main branch.',
+    parents: ['c3d4e5f6789012345678901234567890abcdef12', 'b2c3d4e5f6789012345678901234567890abcdef'],
+    refs: [],
+    tags: ['v1.1.0'],
+    branches: ['main'],
+  },
+  {
+    hash: 'e5f6789012345678901234567890abcdef123456',
+    shortHash: 'e5f6789',
+    author: {
+      name: 'Charlie Brown',
+      email: 'charlie.brown@example.com',
+      date: new Date('2024-01-19T11:20:00Z'),
+    },
+    committer: {
+      name: 'Charlie Brown',
+      email: 'charlie.brown@example.com',
+      date: new Date('2024-01-19T11:20:00Z'),
+    },
+    message: 'Add database migrations\n\nCreated initial database schema and migration scripts.',
+    summary: 'Add database migrations',
+    body: 'Created initial database schema and migration scripts.',
+    parents: ['d4e5f6789012345678901234567890abcdef1234'],
+    refs: [],
+    tags: [],
+    branches: ['main', 'feature/database'],
+  },
+];
+
 // ===================
 // Action Types
 // ===================
@@ -25,17 +134,17 @@ type AppAction =
 
 const initialState: AppState = {
   repository: null,
-  commits: [],
+  commits: mockCommits, // Start with mock data
   selectedCommits: [], // Keep for backward compatibility but will use selectedCommit for single selection
   selectedCommit: null, // New single selection field
-  currentView: 'linear',
+  currentView: 'tabs', // Default to tabs view for the new interface
   mode: 'beginner',
   isLoading: false,
   error: null,
   undoStack: [],
   redoStack: [],
   selectedBranch: null,
-  availableBranches: [],
+  availableBranches: ['main', 'feature/auth', 'feature/database'],
 };
 
 // ===================

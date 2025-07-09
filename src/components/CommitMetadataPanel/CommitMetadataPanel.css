@@ -1,493 +1,442 @@
-/* Commit Metadata Panel Container */
-.commit-metadata-panel {
+/* Outer container */
+.commit-metadata-panel-container {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background-color: #1e1e1e;
-  border-left: 1px solid #3e3e3e;
-  overflow: hidden;
+  background: #1a1a1a;
+  color: #e5e7eb;
 }
 
-.commit-metadata-panel--empty {
-  justify-content: center;
-  align-items: center;
-}
-
-/* Header */
-.commit-metadata-panel__header {
-  padding: 20px 24px;
-  background-color: #2d2d2d;
-  border-bottom: 1px solid #3e3e3e;
+/* Fixed header */
+.commit-metadata-panel-header {
   flex-shrink: 0;
-}
-
-.commit-metadata-panel__title-row {
+  padding: 16px;
+  border-bottom: 1px solid #333;
+  background: #1a1a1a;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  z-index: 10;
 }
 
-.commit-metadata-panel__title {
+.commit-metadata-panel-title {
   margin: 0;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
-  color: #ffffff;
+  color: #e5e7eb;
 }
 
-.commit-metadata-panel__badges {
+.commit-metadata-panel-header-actions {
   display: flex;
   gap: 8px;
 }
 
-.commit-metadata-panel__badge {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 4px 8px;
-  border-radius: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.commit-metadata-panel-action-button {
+  background: #374151;
+  border: 1px solid #4b5563;
+  color: #d1d5db;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
 }
 
-.commit-metadata-panel__badge--merge {
-  background-color: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+.commit-metadata-panel-action-button:hover {
+  background: #4b5563;
+  border-color: #6b7280;
 }
 
-.commit-metadata-panel__badge--initial {
-  background-color: rgba(16, 185, 129, 0.2);
-  color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.3);
-}
-
-/* Content */
-.commit-metadata-panel__content {
+/* Scrollable container */
+.commit-metadata-panel-scroll-container {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 0;
+  /* Force scrollbar to always be visible */
+  scrollbar-gutter: stable;
+  /* Custom scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: #4b5563 #2d3748;
 }
 
-.commit-metadata-panel__content::-webkit-scrollbar {
-  width: 8px;
+/* Webkit scrollbar styling */
+.commit-metadata-panel-scroll-container::-webkit-scrollbar {
+  width: 10px;
 }
 
-.commit-metadata-panel__content::-webkit-scrollbar-track {
-  background: transparent;
+.commit-metadata-panel-scroll-container::-webkit-scrollbar-track {
+  background: #2d3748;
+  border-radius: 5px;
 }
 
-.commit-metadata-panel__content::-webkit-scrollbar-thumb {
-  background-color: rgba(156, 163, 175, 0.3);
-  border-radius: 4px;
+.commit-metadata-panel-scroll-container::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 5px;
+  border: 1px solid #374151;
 }
 
-.commit-metadata-panel__content::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(156, 163, 175, 0.5);
+.commit-metadata-panel-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
 }
 
-/* Sections */
-.commit-metadata-panel__section {
-  padding: 24px;
-  border-bottom: 1px solid #2a2a2a;
+.commit-metadata-panel-scroll-container::-webkit-scrollbar-thumb:active {
+  background: #9ca3af;
 }
 
-.commit-metadata-panel__section:last-child {
-  border-bottom: none;
+/* Content container */
+.commit-metadata-panel-content {
+  padding: 16px;
+  /* Ensure content can grow beyond container */
+  min-height: min-content;
 }
 
-.commit-metadata-panel__section-title {
-  margin: 0 0 20px 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #ffffff;
+/* Empty state */
+.commit-metadata-panel-empty {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  padding: 40px;
 }
 
-.commit-metadata-panel__section-title::before {
-  content: '';
-  width: 4px;
-  height: 16px;
-  background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
-  border-radius: 2px;
+.commit-metadata-panel-empty-state {
+  text-align: center;
+  color: #6b7280;
 }
 
-/* Field Groups */
-.commit-metadata-panel__field-group {
-  display: flex;
-  flex-direction: column;
+.commit-metadata-panel-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.commit-metadata-panel-empty-state h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  color: #9ca3af;
+}
+
+.commit-metadata-panel-empty-state p {
+  margin: 0;
+  color: #6b7280;
+}
+
+/* Section styling */
+.commit-metadata-section {
+  margin-bottom: 32px;
+  background: #252525;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.commit-metadata-section:last-child {
+  margin-bottom: 0;
+}
+
+.commit-metadata-section-title {
+  margin: 0;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #f3f4f6;
+  background: #1f2937;
+  border-bottom: 1px solid #374151;
+}
+
+/* Grid layout for fields */
+.commit-metadata-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 16px;
+  padding: 16px;
 }
 
-.commit-metadata-panel__field {
+.commit-metadata-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.commit-metadata-panel__label {
+.commit-metadata-field--full {
+  grid-column: 1 / -1;
+}
+
+.commit-metadata-label {
   font-size: 12px;
   font-weight: 600;
   color: #9ca3af;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin: 0;
 }
 
-.commit-metadata-panel__value {
-  font-size: 14px;
-  color: #ffffff;
-  line-height: 1.5;
-  background-color: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  padding: 12px;
-  transition: all 0.2s ease;
-}
-
-.commit-metadata-panel__value:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.15);
-}
-
-/* Value Types */
-.commit-metadata-panel__value--code {
-  font-family: 'SF Mono', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  background-color: rgba(0, 0, 0, 0.3);
-  border-color: rgba(255, 255, 255, 0.2);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.commit-metadata-panel__hash-full {
+.commit-metadata-value {
   color: #e5e7eb;
-  font-size: 13px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* Hash display */
+.commit-metadata-hash {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1f2937;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #374151;
+}
+
+.commit-metadata-hash-text {
+  flex: 1;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 12px;
+  color: #fbbf24;
   word-break: break-all;
 }
 
-.commit-metadata-panel__hash-short {
-  color: #9ca3af;
-  font-size: 11px;
-}
-
-.commit-metadata-panel__value--message {
-  font-weight: 500;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  background-color: rgba(59, 130, 246, 0.05);
-  border-color: rgba(59, 130, 246, 0.2);
-}
-
-.commit-metadata-panel__value--body {
-  white-space: pre-wrap;
-  word-wrap: break-word;
+.commit-metadata-copy-button {
+  background: #374151;
+  border: 1px solid #4b5563;
   color: #d1d5db;
-  background-color: rgba(156, 163, 175, 0.05);
-}
-
-.commit-metadata-panel__value--email a {
-  color: #60a5fa;
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-.commit-metadata-panel__value--email a:hover {
-  color: #93c5fd;
-  text-decoration: underline;
-}
-
-/* Date Display */
-.commit-metadata-panel__date {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.commit-metadata-panel__date-full {
-  color: #ffffff;
-  font-weight: 500;
-}
-
-.commit-metadata-panel__date-relative {
-  color: #9ca3af;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
   font-size: 12px;
-  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
 }
 
-/* Hashes List */
-.commit-metadata-panel__hashes {
+.commit-metadata-copy-button:hover {
+  background: #4b5563;
+  border-color: #6b7280;
+}
+
+/* Type badge */
+.commit-metadata-type-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.commit-metadata-type-badge--regular {
+  background: #374151;
+  color: #d1d5db;
+}
+
+.commit-metadata-type-badge--merge {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.commit-metadata-type-badge--initial {
+  background: #059669;
+  color: #ffffff;
+}
+
+/* Message display */
+.commit-metadata-message {
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
   gap: 8px;
+  background: #1f2937;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #374151;
 }
 
-.commit-metadata-panel__hash-item {
+.commit-metadata-message-text {
+  flex: 1;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 13px;
+  color: #e5e7eb;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Person info */
+.commit-metadata-person {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 8px;
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.commit-metadata-panel__hash-short-inline {
-  font-family: 'SF Mono', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  font-size: 11px;
-  font-weight: 600;
+.commit-metadata-person-name {
+  font-weight: 500;
+  color: #f3f4f6;
+}
+
+.commit-metadata-person-email {
+  font-size: 12px;
   color: #9ca3af;
-  text-transform: uppercase;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
 }
 
-.commit-metadata-panel__hash-full-inline {
-  font-family: 'SF Mono', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  font-size: 10px;
-  color: #6b7280;
-  word-break: break-all;
+/* Date display */
+.commit-metadata-date {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-/* Branches and Tags */
-.commit-metadata-panel__branches,
-.commit-metadata-panel__tags {
+.commit-metadata-date-absolute {
+  color: #e5e7eb;
+}
+
+.commit-metadata-date-relative {
+  font-size: 12px;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* Hash lists */
+.commit-metadata-hash-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.commit-metadata-hash-item {
+  background: #1f2937;
+  color: #fbbf24;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 11px;
+  border: 1px solid #374151;
+}
+
+/* Branch list */
+.commit-metadata-branch-list {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
-.commit-metadata-panel__branch {
-  font-size: 11px;
-  font-weight: 600;
+.commit-metadata-branch-item {
+  background: #059669;
+  color: #ffffff;
   padding: 4px 8px;
-  border-radius: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.commit-metadata-panel__tag {
-  font-size: 11px;
+  border-radius: 6px;
+  font-size: 12px;
   font-weight: 500;
-  padding: 4px 8px;
-  border-radius: 4px;
-  background-color: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
-  border: 1px solid rgba(245, 158, 11, 0.3);
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
 }
 
-/* Statistics Grid */
-.commit-metadata-panel__stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 16px;
-}
-
-.commit-metadata-panel__stat {
-  text-align: center;
-  padding: 16px;
-  background-color: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  transition: all 0.2s ease;
-}
-
-.commit-metadata-panel__stat:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-  transform: translateY(-1px);
-}
-
-.commit-metadata-panel__stat-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: #3b82f6;
-  margin-bottom: 4px;
-  font-variant-numeric: tabular-nums;
-}
-
-.commit-metadata-panel__stat-label {
-  font-size: 11px;
-  color: #9ca3af;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
-}
-
-/* Actions */
-.commit-metadata-panel__actions {
+/* Tag list */
+.commit-metadata-tag-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
-.commit-metadata-panel__action-button {
+.commit-metadata-tag-item {
+  background: #7c3aed;
+  color: #ffffff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Empty states */
+.commit-metadata-empty {
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* Statistics */
+.commit-metadata-stat {
+  font-weight: 600;
+  color: #3b82f6;
+  font-size: 16px;
+}
+
+/* Actions section */
+.commit-metadata-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px;
+}
+
+.commit-metadata-action-button {
+  background: #374151;
+  border: 1px solid #4b5563;
+  color: #d1d5db;
   padding: 10px 16px;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background-color: rgba(255, 255, 255, 0.05);
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.commit-metadata-panel__action-button:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.3);
-  transform: translateY(-1px);
-}
-
-.commit-metadata-panel__action-button:active {
-  transform: translateY(0);
-}
-
-.commit-metadata-panel__action-button--primary {
-  background-color: rgba(59, 130, 246, 0.2);
-  border-color: rgba(59, 130, 246, 0.4);
-  color: #93c5fd;
-}
-
-.commit-metadata-panel__action-button--primary:hover {
-  background-color: rgba(59, 130, 246, 0.3);
-  border-color: rgba(59, 130, 246, 0.5);
-}
-
-/* Empty State */
-.commit-metadata-panel__empty-state {
-  text-align: center;
-  color: #6b7280;
-  padding: 60px 40px;
-  max-width: 400px;
-}
-
-.commit-metadata-panel__empty-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-  opacity: 0.6;
-}
-
-.commit-metadata-panel__empty-state h3 {
-  margin: 0 0 12px 0;
-  font-size: 20px;
-  color: #9ca3af;
-}
-
-.commit-metadata-panel__empty-state p {
-  margin: 0;
   font-size: 14px;
-  line-height: 1.5;
-  color: #6b7280;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  flex: 1;
+  min-width: 120px;
 }
 
-/* Responsive Design */
+.commit-metadata-action-button:hover {
+  background: #4b5563;
+  border-color: #6b7280;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.commit-metadata-action-button--primary {
+  background: #3b82f6;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
+.commit-metadata-action-button--primary:hover {
+  background: #2563eb;
+  border-color: #1d4ed8;
+}
+
+.commit-metadata-action-button--secondary {
+  background: #6b7280;
+  border-color: #4b5563;
+  color: #ffffff;
+}
+
+.commit-metadata-action-button--secondary:hover {
+  background: #4b5563;
+  border-color: #374151;
+}
+
+/* Responsive design */
 @media (max-width: 768px) {
-  .commit-metadata-panel__header {
-    padding: 16px 20px;
+  .commit-metadata-grid {
+    grid-template-columns: 1fr;
   }
-
-  .commit-metadata-panel__title {
-    font-size: 18px;
-  }
-
-  .commit-metadata-panel__section {
-    padding: 20px;
-  }
-
-  .commit-metadata-panel__stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-
-  .commit-metadata-panel__stat {
-    padding: 12px;
-  }
-
-  .commit-metadata-panel__stat-value {
-    font-size: 20px;
-  }
-
-  .commit-metadata-panel__actions {
+  
+  .commit-metadata-actions {
     flex-direction: column;
   }
-
-  .commit-metadata-panel__action-button {
-    justify-content: center;
+  
+  .commit-metadata-action-button {
+    flex: none;
   }
 }
 
-/* Dark Mode Enhancements */
-@media (prefers-color-scheme: dark) {
-  .commit-metadata-panel {
-    background-color: #0f0f0f;
-    border-left-color: #2a2a2a;
+@media (max-width: 600px) {
+  .commit-metadata-panel-content {
+    padding: 12px;
   }
-
-  .commit-metadata-panel__header {
-    background-color: #1a1a1a;
-    border-bottom-color: #2a2a2a;
+  
+  .commit-metadata-section {
+    margin-bottom: 24px;
   }
-
-  .commit-metadata-panel__section {
-    border-bottom-color: #222222;
+  
+  .commit-metadata-section-title {
+    padding: 12px;
+    font-size: 14px;
   }
-
-  .commit-metadata-panel__value {
-    background-color: rgba(255, 255, 255, 0.02);
-  }
-
-  .commit-metadata-panel__value--code {
-    background-color: rgba(0, 0, 0, 0.4);
-  }
-
-  .commit-metadata-panel__stat {
-    background-color: rgba(255, 255, 255, 0.02);
-  }
-}
-
-/* Animation */
-.commit-metadata-panel__section {
-  animation: sectionFadeIn 0.4s ease-out backwards;
-}
-
-.commit-metadata-panel__section:nth-child(2) { animation-delay: 0.1s; }
-.commit-metadata-panel__section:nth-child(3) { animation-delay: 0.2s; }
-.commit-metadata-panel__section:nth-child(4) { animation-delay: 0.3s; }
-.commit-metadata-panel__section:nth-child(5) { animation-delay: 0.4s; }
-
-@keyframes sectionFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Field hover effects */
-.commit-metadata-panel__field {
-  animation: fieldSlideIn 0.3s ease-out backwards;
-}
-
-@keyframes fieldSlideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
+  
+  .commit-metadata-grid {
+    padding: 12px;
+    gap: 12px;
   }
 } 

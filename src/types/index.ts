@@ -79,7 +79,7 @@ export interface GitTag {
 // Visualization Types
 // ===================
 
-export type ViewMode = 'linear' | 'tree' | 'timeline';
+export type ViewMode = 'linear' | 'tree' | 'timeline' | 'tabs';
 
 export interface CommitNode {
   commit: GitCommit;

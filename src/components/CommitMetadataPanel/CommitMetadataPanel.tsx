@@ -1,7 +1,7 @@
 import React from 'react';
 import './CommitMetadataPanel.css';
 import { GitCommit } from '../../types';
-import { formatCommitHash, formatRelativeTime } from '../../utils/formatters';
+import { formatCommitHash, formatCommitMessage, formatRelativeTime } from '../../utils/formatters';
 
 interface CommitMetadataPanelProps {
   commit: GitCommit | null;
@@ -10,11 +10,16 @@ interface CommitMetadataPanelProps {
 const CommitMetadataPanel: React.FC<CommitMetadataPanelProps> = ({ commit }) => {
   if (!commit) {
     return (
-      <div className="commit-metadata-panel commit-metadata-panel--empty">
-        <div className="commit-metadata-panel__empty-state">
-          <div className="commit-metadata-panel__empty-icon">📋</div>
-          <h3>No Commit Selected</h3>
-          <p>Select a commit from the list to view its detailed metadata</p>
+      <div className="commit-metadata-panel-container">
+        <div className="commit-metadata-panel-header">
+          <h2 className="commit-metadata-panel-title">Commit Details</h2>
+        </div>
+        <div className="commit-metadata-panel-empty">
+          <div className="commit-metadata-panel-empty-state">
+            <div className="commit-metadata-panel-empty-icon">📄</div>
+            <h3>No Commit Selected</h3>
+            <p>Select a commit from the list to view its details</p>
+          </div>
         </div>
       </div>
     );
@@ -22,253 +27,308 @@ const CommitMetadataPanel: React.FC<CommitMetadataPanelProps> = ({ commit }) => 
 
   const isMergeCommit = commit.parents && commit.parents.length > 1;
   const isInitialCommit = !commit.parents || commit.parents.length === 0;
-  const hasMultipleBranches = commit.branches && commit.branches.length > 1;
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      timeZoneName: 'short'
-    });
+  const handleCopyHash = () => {
+    navigator.clipboard.writeText(commit.hash);
+  };
+
+  const handleCopyMessage = () => {
+    navigator.clipboard.writeText(commit.message);
+  };
+
+  const handleExportCommit = () => {
+    const commitData = {
+      hash: commit.hash,
+      message: commit.message,
+      author: commit.author,
+      committer: commit.committer,
+      parents: commit.parents,
+      branches: commit.branches,
+      tags: commit.tags,
+
+    };
+    
+    const blob = new Blob([JSON.stringify(commitData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `commit-${formatCommitHash(commit.hash)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
-    <div className="commit-metadata-panel">
-      <div className="commit-metadata-panel__header">
-        <div className="commit-metadata-panel__title-row">
-          <h2 className="commit-metadata-panel__title">
-            Commit Details
-          </h2>
-          <div className="commit-metadata-panel__badges">
-            {isMergeCommit && (
-              <span className="commit-metadata-panel__badge commit-metadata-panel__badge--merge">
-                Merge Commit
-              </span>
-            )}
-            {isInitialCommit && (
-              <span className="commit-metadata-panel__badge commit-metadata-panel__badge--initial">
-                Initial Commit
-              </span>
-            )}
-          </div>
+    <div className="commit-metadata-panel-container">
+      <div className="commit-metadata-panel-header">
+        <h2 className="commit-metadata-panel-title">
+          Commit Details
+        </h2>
+        <div className="commit-metadata-panel-header-actions">
+          <button 
+            className="commit-metadata-panel-action-button"
+            onClick={handleCopyHash}
+            title="Copy commit hash"
+          >
+            📋
+          </button>
+          <button 
+            className="commit-metadata-panel-action-button"
+            onClick={handleExportCommit}
+            title="Export commit data"
+          >
+            📤
+          </button>
         </div>
       </div>
 
-      <div className="commit-metadata-panel__content">
-        {/* Basic Information */}
-        <section className="commit-metadata-panel__section">
-          <h3 className="commit-metadata-panel__section-title">Basic Information</h3>
-          
-          <div className="commit-metadata-panel__field-group">
-            <div className="commit-metadata-panel__field">
-              <label className="commit-metadata-panel__label">Hash</label>
-              <div className="commit-metadata-panel__value commit-metadata-panel__value--code">
-                <span className="commit-metadata-panel__hash-full">{commit.hash}</span>
-                <span className="commit-metadata-panel__hash-short">
-                  ({formatCommitHash(commit.hash)})
-                </span>
-              </div>
-            </div>
-
-            <div className="commit-metadata-panel__field">
-              <label className="commit-metadata-panel__label">Message</label>
-              <div className="commit-metadata-panel__value commit-metadata-panel__value--message">
-                {commit.message}
-              </div>
-            </div>
-
-            {commit.body && (
-              <div className="commit-metadata-panel__field">
-                <label className="commit-metadata-panel__label">Description</label>
-                <div className="commit-metadata-panel__value commit-metadata-panel__value--body">
-                  {commit.body}
+      <div className="commit-metadata-panel-scroll-container">
+        <div className="commit-metadata-panel-content">
+          {/* Basic Information Section */}
+          <section className="commit-metadata-section">
+            <h3 className="commit-metadata-section-title">Basic Information</h3>
+            <div className="commit-metadata-grid">
+              <div className="commit-metadata-field">
+                <label className="commit-metadata-label">Hash</label>
+                <div className="commit-metadata-value commit-metadata-hash">
+                  <span className="commit-metadata-hash-text">{commit.hash}</span>
+                  <button 
+                    className="commit-metadata-copy-button"
+                    onClick={handleCopyHash}
+                    title="Copy hash"
+                  >
+                    📋
+                  </button>
                 </div>
               </div>
-            )}
-          </div>
-        </section>
 
-        {/* Author Information */}
-        <section className="commit-metadata-panel__section">
-          <h3 className="commit-metadata-panel__section-title">Author</h3>
-          
-          <div className="commit-metadata-panel__field-group">
-            <div className="commit-metadata-panel__field">
-              <label className="commit-metadata-panel__label">Name</label>
-              <div className="commit-metadata-panel__value">
-                {commit.author.name}
-              </div>
-            </div>
-
-            {commit.author.email && (
-              <div className="commit-metadata-panel__field">
-                <label className="commit-metadata-panel__label">Email</label>
-                <div className="commit-metadata-panel__value commit-metadata-panel__value--email">
-                  <a href={`mailto:${commit.author.email}`}>
-                    {commit.author.email}
-                  </a>
+              <div className="commit-metadata-field">
+                <label className="commit-metadata-label">Short Hash</label>
+                <div className="commit-metadata-value">
+                  {formatCommitHash(commit.hash)}
                 </div>
               </div>
-            )}
 
-            <div className="commit-metadata-panel__field">
-              <label className="commit-metadata-panel__label">Date</label>
-              <div className="commit-metadata-panel__value">
-                <div className="commit-metadata-panel__date">
-                  <span className="commit-metadata-panel__date-full">
-                    {formatDate(commit.author.date)}
-                  </span>
-                  <span className="commit-metadata-panel__date-relative">
-                    ({formatRelativeTime(commit.author.date)})
+              <div className="commit-metadata-field">
+                <label className="commit-metadata-label">Type</label>
+                <div className="commit-metadata-value">
+                  <span className={`commit-metadata-type-badge ${
+                    isMergeCommit ? 'commit-metadata-type-badge--merge' : 
+                    isInitialCommit ? 'commit-metadata-type-badge--initial' : 
+                    'commit-metadata-type-badge--regular'
+                  }`}>
+                    {isMergeCommit ? '🔀 Merge Commit' : 
+                     isInitialCommit ? '🌱 Initial Commit' : 
+                     '📝 Regular Commit'}
                   </span>
                 </div>
               </div>
-            </div>
-          </div>
-        </section>
 
-        {/* Commit Relationships */}
-        <section className="commit-metadata-panel__section">
-          <h3 className="commit-metadata-panel__section-title">Relationships</h3>
-          
-          <div className="commit-metadata-panel__field-group">
-            {commit.parents && commit.parents.length > 0 && (
-              <div className="commit-metadata-panel__field">
-                <label className="commit-metadata-panel__label">
-                  Parent{commit.parents.length > 1 ? 's' : ''} ({commit.parents.length})
-                </label>
-                <div className="commit-metadata-panel__value">
-                  <div className="commit-metadata-panel__hashes">
-                    {commit.parents.map((parent, index) => (
-                      <span key={parent} className="commit-metadata-panel__hash-item">
-                        <span className="commit-metadata-panel__hash-short-inline">
-                          {formatCommitHash(parent)}
-                        </span>
-                        <span className="commit-metadata-panel__hash-full-inline">
-                          {parent}
-                        </span>
-                      </span>
-                    ))}
-                  </div>
+              <div className="commit-metadata-field commit-metadata-field--full">
+                <label className="commit-metadata-label">Message</label>
+                <div className="commit-metadata-value commit-metadata-message">
+                  <pre className="commit-metadata-message-text">{commit.message}</pre>
+                  <button 
+                    className="commit-metadata-copy-button"
+                    onClick={handleCopyMessage}
+                    title="Copy message"
+                  >
+                    📋
+                  </button>
                 </div>
-              </div>
-            )}
-
-            {commit.branches && commit.branches.length > 0 && (
-              <div className="commit-metadata-panel__field">
-                <label className="commit-metadata-panel__label">
-                  Branch{commit.branches.length > 1 ? 'es' : ''} ({commit.branches.length})
-                </label>
-                <div className="commit-metadata-panel__value">
-                  <div className="commit-metadata-panel__branches">
-                    {commit.branches.map((branch, index) => (
-                      <span 
-                        key={branch} 
-                        className="commit-metadata-panel__branch"
-                        style={{
-                          backgroundColor: getBranchColor(index),
-                          color: '#ffffff'
-                        }}
-                      >
-                        {branch}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {commit.tags && commit.tags.length > 0 && (
-              <div className="commit-metadata-panel__field">
-                <label className="commit-metadata-panel__label">
-                  Tag{commit.tags.length > 1 ? 's' : ''} ({commit.tags.length})
-                </label>
-                <div className="commit-metadata-panel__value">
-                  <div className="commit-metadata-panel__tags">
-                    {commit.tags.map((tag) => (
-                      <span key={tag} className="commit-metadata-panel__tag">
-                        🏷️ {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* Statistics */}
-        <section className="commit-metadata-panel__section">
-          <h3 className="commit-metadata-panel__section-title">Statistics</h3>
-          
-          <div className="commit-metadata-panel__field-group">
-            <div className="commit-metadata-panel__stats-grid">
-              <div className="commit-metadata-panel__stat">
-                <div className="commit-metadata-panel__stat-value">
-                  {commit.parents?.length || 0}
-                </div>
-                <div className="commit-metadata-panel__stat-label">Parents</div>
-              </div>
-
-              <div className="commit-metadata-panel__stat">
-                <div className="commit-metadata-panel__stat-value">
-                  {commit.branches?.length || 0}
-                </div>
-                <div className="commit-metadata-panel__stat-label">Branches</div>
-              </div>
-
-              <div className="commit-metadata-panel__stat">
-                <div className="commit-metadata-panel__stat-value">
-                  {commit.tags?.length || 0}
-                </div>
-                <div className="commit-metadata-panel__stat-label">Tags</div>
-              </div>
-
-              <div className="commit-metadata-panel__stat">
-                <div className="commit-metadata-panel__stat-value">
-                  {commit.message.split('\n')[0].length}
-                </div>
-                <div className="commit-metadata-panel__stat-label">Title Length</div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* Actions */}
-        <section className="commit-metadata-panel__section">
-          <h3 className="commit-metadata-panel__section-title">Actions</h3>
-          
-          <div className="commit-metadata-panel__actions">
-            <button className="commit-metadata-panel__action-button commit-metadata-panel__action-button--primary">
-              📋 Copy Hash
-            </button>
-            <button className="commit-metadata-panel__action-button">
-              🔗 Copy Message
-            </button>
-            <button className="commit-metadata-panel__action-button">
-              📤 Export Details
-            </button>
-          </div>
-        </section>
+          {/* Author & Committer Section */}
+          <section className="commit-metadata-section">
+            <h3 className="commit-metadata-section-title">Author & Committer</h3>
+            <div className="commit-metadata-grid">
+              <div className="commit-metadata-field">
+                <label className="commit-metadata-label">Author</label>
+                <div className="commit-metadata-value">
+                  <div className="commit-metadata-person">
+                    <span className="commit-metadata-person-name">{commit.author.name}</span>
+                    {commit.author.email && (
+                      <span className="commit-metadata-person-email">&lt;{commit.author.email}&gt;</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="commit-metadata-field">
+                <label className="commit-metadata-label">Author Date</label>
+                <div className="commit-metadata-value">
+                  <div className="commit-metadata-date">
+                    <span className="commit-metadata-date-absolute">
+                      {commit.author.date.toLocaleString()}
+                    </span>
+                    <span className="commit-metadata-date-relative">
+                      ({formatRelativeTime(commit.author.date)})
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {commit.committer && (
+                <>
+                  <div className="commit-metadata-field">
+                    <label className="commit-metadata-label">Committer</label>
+                    <div className="commit-metadata-value">
+                      <div className="commit-metadata-person">
+                        <span className="commit-metadata-person-name">{commit.committer.name}</span>
+                        {commit.committer.email && (
+                          <span className="commit-metadata-person-email">&lt;{commit.committer.email}&gt;</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="commit-metadata-field">
+                    <label className="commit-metadata-label">Committer Date</label>
+                    <div className="commit-metadata-value">
+                      <div className="commit-metadata-date">
+                        <span className="commit-metadata-date-absolute">
+                          {commit.committer.date.toLocaleString()}
+                        </span>
+                        <span className="commit-metadata-date-relative">
+                          ({formatRelativeTime(commit.committer.date)})
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </section>
+
+          {/* Relationships Section */}
+          <section className="commit-metadata-section">
+            <h3 className="commit-metadata-section-title">Relationships</h3>
+            <div className="commit-metadata-grid">
+              <div className="commit-metadata-field">
+                <label className="commit-metadata-label">Parents</label>
+                <div className="commit-metadata-value">
+                  {commit.parents && commit.parents.length > 0 ? (
+                    <div className="commit-metadata-hash-list">
+                      {commit.parents.map((parentHash, index) => (
+                        <span key={parentHash} className="commit-metadata-hash-item">
+                          {formatCommitHash(parentHash)}
+                          {index < commit.parents!.length - 1 && ', '}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="commit-metadata-empty">No parents (initial commit)</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="commit-metadata-field">
+                <label className="commit-metadata-label">Branches</label>
+                <div className="commit-metadata-value">
+                  {commit.branches && commit.branches.length > 0 ? (
+                    <div className="commit-metadata-branch-list">
+                      {commit.branches.map((branch) => (
+                        <span key={branch} className="commit-metadata-branch-item">
+                          🌿 {branch}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="commit-metadata-empty">No branch information</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="commit-metadata-field">
+                <label className="commit-metadata-label">Tags</label>
+                <div className="commit-metadata-value">
+                  {commit.tags && commit.tags.length > 0 ? (
+                    <div className="commit-metadata-tag-list">
+                      {commit.tags.map((tag) => (
+                        <span key={tag} className="commit-metadata-tag-item">
+                          🏷️ {tag}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="commit-metadata-empty">No tags</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Statistics Section */}
+          <section className="commit-metadata-section">
+            <h3 className="commit-metadata-section-title">Statistics</h3>
+            <div className="commit-metadata-grid">
+              <div className="commit-metadata-field">
+                <label className="commit-metadata-label">Files Changed</label>
+                <div className="commit-metadata-value">
+                  <span className="commit-metadata-stat">
+                    Unknown
+                  </span>
+                </div>
+              </div>
+
+              <div className="commit-metadata-field">
+                <label className="commit-metadata-label">Parent Count</label>
+                <div className="commit-metadata-value">
+                  <span className="commit-metadata-stat">
+                    {commit.parents ? commit.parents.length : 0}
+                  </span>
+                </div>
+              </div>
+
+              <div className="commit-metadata-field">
+                <label className="commit-metadata-label">Branch Count</label>
+                <div className="commit-metadata-value">
+                  <span className="commit-metadata-stat">
+                    {commit.branches ? commit.branches.length : 0}
+                  </span>
+                </div>
+              </div>
+
+              <div className="commit-metadata-field">
+                <label className="commit-metadata-label">Tag Count</label>
+                <div className="commit-metadata-value">
+                  <span className="commit-metadata-stat">
+                    {commit.tags ? commit.tags.length : 0}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Actions Section */}
+          <section className="commit-metadata-section">
+            <h3 className="commit-metadata-section-title">Actions</h3>
+            <div className="commit-metadata-actions">
+              <button 
+                className="commit-metadata-action-button commit-metadata-action-button--primary"
+                onClick={handleCopyHash}
+              >
+                📋 Copy Hash
+              </button>
+              <button 
+                className="commit-metadata-action-button commit-metadata-action-button--secondary"
+                onClick={handleCopyMessage}
+              >
+                📝 Copy Message
+              </button>
+              <button 
+                className="commit-metadata-action-button commit-metadata-action-button--secondary"
+                onClick={handleExportCommit}
+              >
+                📤 Export Data
+              </button>
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   );
-};
-
-// Helper function to get branch colors
-const getBranchColor = (index: number): string => {
-  const colors = [
-    '#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16',
-    '#22c55e', '#10b981', '#14b8a6', '#06b6d4', '#0ea5e9',
-    '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#d946ef',
-    '#ec4899', '#f43f5e'
-  ];
-  return colors[index % colors.length];
 };
 
 export default CommitMetadataPanel; 
