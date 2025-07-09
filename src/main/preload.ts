@@ -20,15 +20,9 @@ interface ElectronAPI {
   // File system operations
   selectDirectory: () => Promise<string | null>;
   
-  // Auto-updater
+  // Auto-updater (TODO: Will be implemented later)
   checkForUpdates: () => Promise<void>;
   restartAndInstall: () => Promise<void>;
-  onUpdateChecking: (callback: () => void) => void;
-  onUpdateAvailable: (callback: (info: unknown) => void) => void;
-  onUpdateNotAvailable: (callback: (info: unknown) => void) => void;
-  onUpdateError: (callback: (message: string) => void) => void;
-  onUpdateDownloadProgress: (callback: (progress: unknown) => void) => void;
-  onUpdateDownloaded: (callback: (info: unknown) => void) => void;
   
   // Utility functions
   removeAllListeners: (channel: string) => void;
@@ -76,30 +70,14 @@ const electronAPI: ElectronAPI = {
     return ipcRenderer.invoke('dialog-select-directory');
   },
   
-  // Auto-updater
+  // Auto-updater (TODO: Will be implemented later)
   checkForUpdates: () => {
-    return ipcRenderer.invoke('app-check-for-updates');
+    console.log('Auto-updater not yet implemented');
+    return Promise.resolve();
   },
   restartAndInstall: () => {
-    return ipcRenderer.invoke('app-restart-and-install');
-  },
-  onUpdateChecking: (callback) => {
-    ipcRenderer.on('update-checking', callback);
-  },
-  onUpdateAvailable: (callback) => {
-    ipcRenderer.on('update-available', (_event, info) => callback(info));
-  },
-  onUpdateNotAvailable: (callback) => {
-    ipcRenderer.on('update-not-available', (_event, info) => callback(info));
-  },
-  onUpdateError: (callback) => {
-    ipcRenderer.on('update-error', (_event, message) => callback(message));
-  },
-  onUpdateDownloadProgress: (callback) => {
-    ipcRenderer.on('update-download-progress', (_event, progress) => callback(progress));
-  },
-  onUpdateDownloaded: (callback) => {
-    ipcRenderer.on('update-downloaded', (_event, info) => callback(info));
+    console.log('Auto-updater not yet implemented');
+    return Promise.resolve();
   },
   
   // Utility functions
