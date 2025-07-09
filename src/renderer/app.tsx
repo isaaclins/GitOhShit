@@ -48,12 +48,12 @@ const AppContent: React.FC = () => {
       });
       
       // Extract commits from the result (GitService returns { commits, hasMore, total })
-      const commits = Array.isArray(commitsResult) ? commitsResult : (commitsResult as any)?.commits || [];
+      const commits = Array.isArray(commitsResult) ? commitsResult : (commitsResult as { commits?: GitCommit[] })?.commits || [];
       actions.setCommits(commits);
 
       // Set available branches from repository
       if (repository.branches && Array.isArray(repository.branches)) {
-        const branchNames = repository.branches.map((branch: any) => branch.name);
+        const branchNames = repository.branches.map((branch: { name: string }) => branch.name);
         actions.setAvailableBranches(branchNames);
       }
 

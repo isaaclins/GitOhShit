@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import { GitRepository, GitCommit } from '../types';
 
 // Define the API that will be exposed to the renderer process
 interface ElectronAPI {
@@ -11,10 +12,10 @@ interface ElectronAPI {
   
   // Git operations
   validateRepository: (path: string) => Promise<boolean>;
-  openRepository: (path: string) => Promise<any>;
-  getCommits: (path: string, options?: { maxCount?: number }) => Promise<any[]>;
-  getCommitHistory: (repoPath: string) => Promise<any[]>;
-  editCommit: (repoPath: string, commitHash: string, changes: any) => Promise<boolean>;
+  openRepository: (path: string) => Promise<GitRepository>;
+  getCommits: (path: string, options?: { maxCount?: number }) => Promise<GitCommit[]>;
+  getCommitHistory: (repoPath: string) => Promise<GitCommit[]>;
+  editCommit: (repoPath: string, commitHash: string, changes: Record<string, unknown>) => Promise<boolean>;
   
   // File system operations
   selectDirectory: () => Promise<string | null>;
@@ -56,7 +57,7 @@ const electronAPI: ElectronAPI = {
   getCommitHistory: (repoPath: string) => {
     return ipcRenderer.invoke('git-get-commit-history', repoPath);
   },
-  editCommit: (repoPath: string, commitHash: string, changes: any) => {
+  editCommit: (repoPath: string, commitHash: string, changes: Record<string, unknown>) => {
     return ipcRenderer.invoke('git-edit-commit', repoPath, commitHash, changes);
   },
   

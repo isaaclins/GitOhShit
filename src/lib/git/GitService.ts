@@ -2,6 +2,43 @@ import simpleGit, { SimpleGit } from 'simple-git';
 import { GitRepository, GitCommit, GitBranch, GitStatus } from '../../types';
 import { GitServiceConfig, GitLogResult } from './types';
 
+// Types for simple-git library objects
+interface SimpleGitCommit {
+  hash: string;
+  shortHash: string;
+  author: string;
+  authorEmail: string;
+  authorDate: string;
+  authorDateISO: string;
+  authorDateRelative: string;
+  committer: string;
+  committerEmail: string;
+  committerDate: string;
+  committerDateISO: string;
+  committerDateRelative: string;
+  message: string;
+  body: string;
+  rawBody: string;
+  notes: string;
+  encoding: string;
+  tree: string;
+  parents?: string;
+  refs?: string;
+  signature?: string;
+  diff?: {
+    files: Array<{ file?: string; path?: string }>;
+    insertions?: number;
+    deletions?: number;
+  };
+  numstat?: string;
+  stat?: string;
+}
+
+interface SimpleGitDiffFile {
+  file?: string;
+  path?: string;
+}
+
 /**
  * GitService
  * Core service for Git operations using simple-git
@@ -79,7 +116,7 @@ export class GitService {
         }
       });
 
-      const commits: GitCommit[] = log.all.map((commit: any) => ({
+      const commits: GitCommit[] = log.all.map((commit: SimpleGitCommit) => ({
         hash: commit.hash,
         shortHash: commit.shortHash,
         author: {
@@ -230,7 +267,7 @@ export class GitService {
   /**
    * Parse commit statistics from Git log output
    */
-  private parseCommitStats(commit: any): { files: number; insertions: number; deletions: number; changedFiles: string[] } | null {
+  private parseCommitStats(commit: SimpleGitCommit): { files: number; insertions: number; deletions: number; changedFiles: string[] } | null {
     try {
       // Simple-git provides stats in different formats, try to extract what we can
       let files = 0;
@@ -241,7 +278,7 @@ export class GitService {
       // Check if we have diff stats from simple-git
       if (commit.diff && commit.diff.files) {
         files = commit.diff.files.length;
-        changedFiles = commit.diff.files.map((f: any) => f.file || f.path || '');
+        changedFiles = commit.diff.files.map((f: SimpleGitDiffFile) => f.file || f.path || '');
         insertions = commit.diff.insertions || 0;
         deletions = commit.diff.deletions || 0;
       } else if (commit.numstat) {

@@ -22,9 +22,9 @@ describe('Formatter Utilities', () => {
 
     test('handles empty and invalid inputs', () => {
       expect(formatCommitHash('')).toBe('');
-      expect(formatCommitHash(null as any)).toBe('');
-      expect(formatCommitHash(undefined as any)).toBe('');
-      expect(formatCommitHash(123 as any)).toBe('');
+      expect(formatCommitHash(null as unknown as string)).toBe('');
+      expect(formatCommitHash(undefined as unknown as string)).toBe('');
+      expect(formatCommitHash(123 as unknown as string)).toBe('');
     });
   });
 
@@ -43,8 +43,8 @@ describe('Formatter Utilities', () => {
     test('handles invalid dates', () => {
       expect(formatCommitDate('invalid-date')).toBe('Invalid Date');
       expect(formatCommitDate('')).toBe('Invalid Date');
-      expect(formatCommitDate(null as any)).toBe('Invalid Date');
-      expect(formatCommitDate(undefined as any)).toBe('Invalid Date');
+      expect(formatCommitDate(null as unknown)).toBe('Invalid Date');
+      expect(formatCommitDate(undefined as unknown)).toBe('Invalid Date');
     });
   });
 
@@ -84,7 +84,7 @@ describe('Formatter Utilities', () => {
 
     test('handles invalid dates', () => {
       expect(formatRelativeTime('invalid-date')).toBe('Invalid Date');
-      expect(formatRelativeTime(null as any)).toBe('Invalid Date');
+      expect(formatRelativeTime(null as unknown)).toBe('Invalid Date');
     });
   });
 
@@ -114,8 +114,8 @@ describe('Formatter Utilities', () => {
     test('handles empty and invalid inputs', () => {
       expect(formatCommitMessage('')).toBe('');
       expect(formatCommitMessage('   ')).toBe('');
-      expect(formatCommitMessage(null as any)).toBe('');
-      expect(formatCommitMessage(undefined as any)).toBe('');
+      expect(formatCommitMessage(null as unknown)).toBe('');
+      expect(formatCommitMessage(undefined as unknown)).toBe('');
     });
   });
 
@@ -136,8 +136,8 @@ describe('Formatter Utilities', () => {
 
     test('handles empty and invalid inputs', () => {
       expect(formatFilePath('')).toBe('');
-      expect(formatFilePath(null as any)).toBe('');
-      expect(formatFilePath(undefined as any)).toBe('');
+      expect(formatFilePath(null as unknown)).toBe('');
+      expect(formatFilePath(undefined as unknown)).toBe('');
     });
   });
 
@@ -161,8 +161,8 @@ describe('Formatter Utilities', () => {
 
     test('handles empty and invalid inputs', () => {
       expect(formatBranchName('')).toBe('');
-      expect(formatBranchName(null as any)).toBe('');
-      expect(formatBranchName(undefined as any)).toBe('');
+      expect(formatBranchName(null as unknown)).toBe('');
+      expect(formatBranchName(undefined as unknown)).toBe('');
     });
   });
 
@@ -195,9 +195,9 @@ describe('Formatter Utilities', () => {
 
     test('handles invalid inputs', () => {
       expect(formatFileSize(-1)).toBe('0 B');
-      expect(formatFileSize(null as any)).toBe('0 B');
-      expect(formatFileSize(undefined as any)).toBe('0 B');
-      expect(formatFileSize('invalid' as any)).toBe('0 B');
+      expect(formatFileSize(null as unknown)).toBe('0 B');
+      expect(formatFileSize(undefined as unknown)).toBe('0 B');
+      expect(formatFileSize('invalid' as unknown)).toBe('0 B');
     });
   });
 }); 

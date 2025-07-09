@@ -31,10 +31,10 @@ describe('Validation Utilities', () => {
     });
 
     test('rejects non-string inputs', () => {
-      expect(isValidCommitHash(null as any)).toBe(false);
-      expect(isValidCommitHash(undefined as any)).toBe(false);
-      expect(isValidCommitHash(123 as any)).toBe(false);
-      expect(isValidCommitHash({} as any)).toBe(false);
+      expect(isValidCommitHash(null as unknown)).toBe(false);
+      expect(isValidCommitHash(undefined as unknown)).toBe(false);
+      expect(isValidCommitHash(123 as unknown)).toBe(false);
+      expect(isValidCommitHash({} as unknown)).toBe(false);
     });
   });
 
@@ -56,9 +56,9 @@ describe('Validation Utilities', () => {
     });
 
     test('rejects non-string inputs', () => {
-      expect(isValidEmail(null as any)).toBe(false);
-      expect(isValidEmail(undefined as any)).toBe(false);
-      expect(isValidEmail(123 as any)).toBe(false);
+      expect(isValidEmail(null as unknown)).toBe(false);
+      expect(isValidEmail(undefined as unknown)).toBe(false);
+      expect(isValidEmail(123 as unknown)).toBe(false);
     });
   });
 
@@ -86,9 +86,9 @@ describe('Validation Utilities', () => {
     });
 
     test('rejects non-string inputs', () => {
-      expect(isValidCommitMessage(null as any)).toBe(false);
-      expect(isValidCommitMessage(undefined as any)).toBe(false);
-      expect(isValidCommitMessage(123 as any)).toBe(false);
+      expect(isValidCommitMessage(null as unknown)).toBe(false);
+      expect(isValidCommitMessage(undefined as unknown)).toBe(false);
+      expect(isValidCommitMessage(123 as unknown)).toBe(false);
     });
   });
 
@@ -118,9 +118,9 @@ describe('Validation Utilities', () => {
     });
 
     test('rejects non-string inputs', () => {
-      expect(isValidBranchName(null as any)).toBe(false);
-      expect(isValidBranchName(undefined as any)).toBe(false);
-      expect(isValidBranchName(123 as any)).toBe(false);
+      expect(isValidBranchName(null as unknown)).toBe(false);
+      expect(isValidBranchName(undefined as unknown)).toBe(false);
+      expect(isValidBranchName(123 as unknown)).toBe(false);
     });
   });
 
@@ -148,9 +148,9 @@ describe('Validation Utilities', () => {
     });
 
     test('rejects non-string inputs', () => {
-      expect(isValidTagName(null as any)).toBe(false);
-      expect(isValidTagName(undefined as any)).toBe(false);
-      expect(isValidTagName(123 as any)).toBe(false);
+      expect(isValidTagName(null as unknown)).toBe(false);
+      expect(isValidTagName(undefined as unknown)).toBe(false);
+      expect(isValidTagName(123 as unknown)).toBe(false);
     });
   });
 
@@ -177,9 +177,9 @@ describe('Validation Utilities', () => {
     });
 
     test('rejects non-string inputs', () => {
-      expect(isValidRepositoryPath(null as any)).toBe(false);
-      expect(isValidRepositoryPath(undefined as any)).toBe(false);
-      expect(isValidRepositoryPath(123 as any)).toBe(false);
+      expect(isValidRepositoryPath(null as unknown)).toBe(false);
+      expect(isValidRepositoryPath(undefined as unknown)).toBe(false);
+      expect(isValidRepositoryPath(123 as unknown)).toBe(false);
     });
   });
 }); 

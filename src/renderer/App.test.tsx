@@ -1,7 +1,28 @@
 import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import '@testing-library/jest-dom';
 import App from './app';
+
+// Type declaration for electronAPI in tests
+declare global {
+  interface Window {
+    electronAPI: {
+      onMenuOpenRepository: jest.Mock;
+      onMenuCloseRepository: jest.Mock;
+      onMenuViewLinear: jest.Mock;
+      onMenuViewTree: jest.Mock;
+      onMenuViewTimeline: jest.Mock;
+      validateRepository: jest.Mock;
+      openRepository: jest.Mock;
+      getCommits: jest.Mock;
+      getCommitHistory: jest.Mock;
+      editCommit: jest.Mock;
+      selectDirectory: jest.Mock;
+      removeAllListeners: jest.Mock;
+    };
+  }
+}
 
 // Mock the electronAPI
 const mockElectronAPI = {
@@ -35,44 +56,46 @@ describe('App Component', () => {
     render(<App />);
     
     expect(screen.getByText('Welcome to Git-O-Shit')).toBeInTheDocument();
-    expect(screen.getByText('A visual Git history editor that helps you fix your git mistakes.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Open Repository' })).toBeInTheDocument();
+    expect(screen.getByText('A visual Git history browser that helps you understand your repository.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '📁 Open Repository' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '📁 Open Git Repository' })).toBeInTheDocument();
   });
 
-  test('renders header with title and mode toggle', () => {
+  test('renders header with title and view label', () => {
     render(<App />);
     
     expect(screen.getByText('Git-O-Shit')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Advanced Mode' })).toBeInTheDocument();
-  });
-
-  test('toggles between beginner and advanced mode', async () => {
-    const user = userEvent.setup();
-    render(<App />);
-    
-    const modeToggle = screen.getByRole('button', { name: 'Advanced Mode' });
-    expect(modeToggle).toBeInTheDocument();
-    
-    // Click to switch to advanced mode
-    await act(async () => {
-      await user.click(modeToggle);
-    });
-    expect(screen.getByRole('button', { name: 'Beginner Mode' })).toBeInTheDocument();
-    
-    // Click to switch back to beginner mode
-    await act(async () => {
-      await user.click(screen.getByRole('button', { name: 'Beginner Mode' }));
-    });
-    expect(screen.getByRole('button', { name: 'Advanced Mode' })).toBeInTheDocument();
+    expect(screen.getByText('Commit Browser')).toBeInTheDocument();
   });
 
   test('calls selectDirectory when Open Repository button is clicked', async () => {
     const user = userEvent.setup();
     mockElectronAPI.selectDirectory.mockResolvedValue('/path/to/repo');
+    mockElectronAPI.validateRepository.mockResolvedValue(true);
+    mockElectronAPI.openRepository.mockResolvedValue({
+      name: 'test-repo',
+      path: '/path/to/repo',
+      currentBranch: 'main',
+      branches: [],
+      remotes: [],
+      status: { 
+        current: 'main',
+        ahead: 0, 
+        behind: 0, 
+        created: [],
+        deleted: [],
+        modified: [], 
+        renamed: [],
+        staged: [],
+        conflicted: [],
+        not_added: []
+      }
+    });
+    mockElectronAPI.getCommits.mockResolvedValue({ commits: [] });
     
     render(<App />);
     
-    const openButton = screen.getByRole('button', { name: 'Open Repository' });
+    const openButton = screen.getByRole('button', { name: '📁 Open Repository' });
     await act(async () => {
       await user.click(openButton);
     });
@@ -80,117 +103,144 @@ describe('App Component', () => {
     expect(mockElectronAPI.selectDirectory).toHaveBeenCalled();
   });
 
-  test('displays repository view when repository is selected', async () => {
+  test('displays repository info when repository is loaded', async () => {
     const user = userEvent.setup();
     const mockRepoPath = '/path/to/test/repo';
     const mockRepository = {
       name: 'test-repo',
       path: mockRepoPath,
       currentBranch: 'main',
-      status: { ahead: 0, behind: 0, modified: [], staged: [] }
-    };
-    const mockCommits = [
-      {
-        hash: 'abc123',
-        shortHash: 'abc123',
-        summary: 'Test commit',
-        author: { name: 'Test User', date: new Date() }
+      branches: [{ name: 'main', current: true, commit: 'abc123' }],
+      remotes: [],
+      status: { 
+        current: 'main',
+        ahead: 0, 
+        behind: 0, 
+        created: [],
+        deleted: [],
+        modified: [], 
+        renamed: [],
+        staged: [],
+        conflicted: [],
+        not_added: []
       }
-    ];
-    
-    mockElectronAPI.selectDirectory.mockResolvedValue(mockRepoPath);
-    mockElectronAPI.validateRepository.mockResolvedValue(true);
-    mockElectronAPI.openRepository.mockResolvedValue(mockRepository);
-    mockElectronAPI.getCommits.mockResolvedValue(mockCommits);
-    
-    render(<App />);
-    
-    const openButton = screen.getByRole('button', { name: 'Open Repository' });
-    await act(async () => {
-      await user.click(openButton);
-    });
-    
-    await waitFor(() => {
-      expect(screen.getByText(mockRepoPath)).toBeInTheDocument();
-    });
-    
-    // Should show view mode buttons
-    expect(screen.getByRole('button', { name: 'Linear' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Tree' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Timeline' })).toBeInTheDocument();
-    
-    // Should show Git History view
-    expect(screen.getByText('Git History (linear view)')).toBeInTheDocument();
-  });
-
-  test('switches between view modes', async () => {
-    const user = userEvent.setup();
-    const mockRepoPath = '/path/to/test/repo';
-    const mockRepository = {
-      name: 'test-repo',
-      path: mockRepoPath,
-      currentBranch: 'main',
-      status: { ahead: 0, behind: 0, modified: [], staged: [] }
     };
-    const mockCommits = [];
+    const mockCommits = [{
+      hash: 'abc123',
+      shortHash: 'abc123',
+      message: 'Test commit',
+      summary: 'Test commit',
+      author: { 
+        name: 'Test User', 
+        email: 'test@example.com',
+        date: new Date() 
+      },
+      committer: { 
+        name: 'Test User', 
+        email: 'test@example.com',
+        date: new Date() 
+      },
+      parents: [],
+      refs: [],
+      tags: [],
+      branches: ['main']
+    }];
     
     mockElectronAPI.selectDirectory.mockResolvedValue(mockRepoPath);
     mockElectronAPI.validateRepository.mockResolvedValue(true);
     mockElectronAPI.openRepository.mockResolvedValue(mockRepository);
-    mockElectronAPI.getCommits.mockResolvedValue(mockCommits);
+    mockElectronAPI.getCommits.mockResolvedValue({ commits: mockCommits });
     
     render(<App />);
     
-    // Open repository first
-    const openButton = screen.getByRole('button', { name: 'Open Repository' });
+    const openButton = screen.getByRole('button', { name: '📁 Open Repository' });
     await act(async () => {
       await user.click(openButton);
     });
     
     await waitFor(() => {
-      expect(screen.getByText(mockRepoPath)).toBeInTheDocument();
+      expect(screen.getByText('test-repo')).toBeInTheDocument();
+      expect(screen.getByText('📍 main')).toBeInTheDocument();
+      expect(screen.getByText('📝 1 commits')).toBeInTheDocument();
     });
     
-    // Switch to tree view
-    await act(async () => {
-      await user.click(screen.getByRole('button', { name: 'Tree' }));
-    });
-    expect(screen.getByText('Git History (tree view)')).toBeInTheDocument();
-    
-    // Switch to timeline view
-    await act(async () => {
-      await user.click(screen.getByRole('button', { name: 'Timeline' }));
-    });
-    expect(screen.getByText('Git History (timeline view)')).toBeInTheDocument();
-    
-    // Switch back to linear view
-    await act(async () => {
-      await user.click(screen.getByRole('button', { name: 'Linear' }));
-    });
-    expect(screen.getByText('Git History (linear view)')).toBeInTheDocument();
+    // Should show close button when repository is loaded
+    expect(screen.getByRole('button', { name: '✕ Close' })).toBeInTheDocument();
   });
 
-  test('displays mode information in repository view', async () => {
+  test('displays commit list when repository is loaded', async () => {
     const user = userEvent.setup();
-    const mockRepoPath = '/path/to/test/repo';
-    mockElectronAPI.selectDirectory.mockResolvedValue(mockRepoPath);
+    const mockCommits = [{
+      hash: 'abc123def456',
+      shortHash: 'abc123d',
+      message: 'Initial commit',
+      summary: 'Initial commit',
+      author: { 
+        name: 'Test User', 
+        email: 'test@example.com',
+        date: new Date('2024-01-15') 
+      },
+      committer: { 
+        name: 'Test User', 
+        email: 'test@example.com',
+        date: new Date('2024-01-15') 
+      },
+      parents: [],
+      refs: [],
+      tags: [],
+      branches: ['main']
+    }];
+    
+    mockElectronAPI.selectDirectory.mockResolvedValue('/test/repo');
+    mockElectronAPI.validateRepository.mockResolvedValue(true);
+    mockElectronAPI.openRepository.mockResolvedValue({
+      name: 'test-repo',
+      currentBranch: 'main',
+      branches: [],
+      remotes: [],
+      status: { 
+        current: 'main',
+        ahead: 0, 
+        behind: 0, 
+        created: [],
+        deleted: [],
+        modified: [], 
+        renamed: [],
+        staged: [],
+        conflicted: [],
+        not_added: []
+      }
+    });
+    mockElectronAPI.getCommits.mockResolvedValue({ commits: mockCommits });
     
     render(<App />);
     
     // Open repository
     await act(async () => {
-      await user.click(screen.getByRole('button', { name: 'Open Repository' }));
+      await user.click(screen.getByRole('button', { name: '📁 Open Repository' }));
     });
     
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Advanced Mode' })).toBeInTheDocument();
+      expect(screen.getByText('Initial commit')).toBeInTheDocument();
+      expect(screen.getByText('abc123d')).toBeInTheDocument();
+    });
+  });
+
+  test('handles repository validation failure', async () => {
+    const user = userEvent.setup();
+    mockElectronAPI.selectDirectory.mockResolvedValue('/invalid/path');
+    mockElectronAPI.validateRepository.mockResolvedValue(false);
+    
+    render(<App />);
+    
+    const openButton = screen.getByRole('button', { name: '📁 Open Repository' });
+    await act(async () => {
+      await user.click(openButton);
     });
     
-    // Switch to advanced mode
-    await act(async () => {
-      await user.click(screen.getByRole('button', { name: 'Advanced Mode' }));
+    await waitFor(() => {
+      expect(screen.getByText(/Selected directory is not a valid Git repository/)).toBeInTheDocument();
     });
-    expect(screen.getByRole('button', { name: 'Beginner Mode' })).toBeInTheDocument();
   });
 
   test('sets up electron menu listeners on mount', () => {
@@ -203,21 +253,19 @@ describe('App Component', () => {
     expect(mockElectronAPI.onMenuViewTimeline).toHaveBeenCalled();
   });
 
-  test('handles selectDirectory rejection gracefully', async () => {
+  test('handles selectDirectory cancellation gracefully', async () => {
     const user = userEvent.setup();
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
-    mockElectronAPI.selectDirectory.mockRejectedValue(new Error('Selection failed'));
+    mockElectronAPI.selectDirectory.mockResolvedValue(null); // User cancelled
     
     render(<App />);
     
-    const openButton = screen.getByRole('button', { name: 'Open Repository' });
+    const openButton = screen.getByRole('button', { name: '📁 Open Repository' });
     await act(async () => {
       await user.click(openButton);
     });
     
-    expect(consoleErrorSpy).toHaveBeenCalledWith('Error opening repository:', expect.any(Error));
-    
-    consoleErrorSpy.mockRestore();
+    // Should not show any error when user cancels
+    expect(screen.queryByText(/error/i)).not.toBeInTheDocument();
   });
 
   test('handles undefined electronAPI gracefully', () => {
@@ -231,5 +279,54 @@ describe('App Component', () => {
     
     // Restore electronAPI
     window.electronAPI = originalAPI;
+  });
+
+  test('closes repository when close button is clicked', async () => {
+    const user = userEvent.setup();
+    
+    // First open a repository
+    mockElectronAPI.selectDirectory.mockResolvedValue('/test/repo');
+    mockElectronAPI.validateRepository.mockResolvedValue(true);
+    mockElectronAPI.openRepository.mockResolvedValue({
+      name: 'test-repo',
+      currentBranch: 'main',
+      branches: [],
+      remotes: [],
+      status: { 
+        current: 'main',
+        ahead: 0, 
+        behind: 0, 
+        created: [],
+        deleted: [],
+        modified: [], 
+        renamed: [],
+        staged: [],
+        conflicted: [],
+        not_added: []
+      }
+    });
+    mockElectronAPI.getCommits.mockResolvedValue({ commits: [] });
+    
+    render(<App />);
+    
+    // Open repository
+    await act(async () => {
+      await user.click(screen.getByRole('button', { name: '📁 Open Repository' }));
+    });
+    
+    // Wait for repository to load
+    await waitFor(() => {
+      expect(screen.getByText('test-repo')).toBeInTheDocument();
+    });
+    
+    // Close repository
+    await act(async () => {
+      await user.click(screen.getByRole('button', { name: '✕ Close' }));
+    });
+    
+    // Should return to welcome screen
+    await waitFor(() => {
+      expect(screen.getByText('Welcome to Git-O-Shit')).toBeInTheDocument();
+    });
   });
 }); 

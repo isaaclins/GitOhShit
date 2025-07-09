@@ -279,25 +279,40 @@ export interface GitHook {
 // Type Guards
 // ===================
 
-export function isGitCommit(obj: any): obj is GitCommit {
+export function isGitCommit(obj: unknown): obj is GitCommit {
   return obj && 
-    typeof obj.hash === 'string' &&
-    typeof obj.message === 'string' &&
-    obj.author && 
-    typeof obj.author.name === 'string';
+    typeof obj === 'object' &&
+    'hash' in obj &&
+    typeof (obj as { hash: unknown }).hash === 'string' &&
+    'message' in obj &&
+    typeof (obj as { message: unknown }).message === 'string' &&
+    'author' in obj &&
+    (obj as { author: unknown }).author && 
+    typeof (obj as { author: { name: unknown } }).author === 'object' &&
+    'name' in (obj as { author: { name: unknown } }).author &&
+    typeof (obj as { author: { name: unknown } }).author.name === 'string';
 }
 
-export function isGitBranch(obj: any): obj is GitBranch {
+export function isGitBranch(obj: unknown): obj is GitBranch {
   return obj && 
-    typeof obj.name === 'string' &&
-    typeof obj.current === 'boolean' &&
-    typeof obj.commit === 'string';
+    typeof obj === 'object' &&
+    'name' in obj &&
+    typeof (obj as { name: unknown }).name === 'string' &&
+    'current' in obj &&
+    typeof (obj as { current: unknown }).current === 'boolean' &&
+    'commit' in obj &&
+    typeof (obj as { commit: unknown }).commit === 'string';
 }
 
-export function isGitRepository(obj: any): obj is GitRepository {
+export function isGitRepository(obj: unknown): obj is GitRepository {
   return obj && 
-    typeof obj.path === 'string' &&
-    typeof obj.name === 'string' &&
-    typeof obj.isValid === 'boolean' &&
-    Array.isArray(obj.branches);
+    typeof obj === 'object' &&
+    'path' in obj &&
+    typeof (obj as { path: unknown }).path === 'string' &&
+    'name' in obj &&
+    typeof (obj as { name: unknown }).name === 'string' &&
+    'isValid' in obj &&
+    typeof (obj as { isValid: unknown }).isValid === 'boolean' &&
+    'branches' in obj &&
+    Array.isArray((obj as { branches: unknown }).branches);
 } 

@@ -212,7 +212,7 @@ app.on('ready', () => {
     }
   });
 
-  ipcMain.handle('git-edit-commit', async (_event, repoPath: string, commitHash: string, changes: any) => {
+  ipcMain.handle('git-edit-commit', async (_event, repoPath: string, commitHash: string, changes: Record<string, unknown>) => {
     try {
       // TODO: Implement commit editing functionality
       console.log('Edit commit requested:', { repoPath, commitHash, changes });

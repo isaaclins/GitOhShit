@@ -163,7 +163,7 @@ export interface HistoryEntry {
   timestamp: Date;
   operation: string;
   description: string;
-  data: any;
+  data: Record<string, unknown>;
   reversible: boolean;
 }
 
@@ -193,7 +193,7 @@ export interface BranchOperation {
   commits: string[];
   targetBranch?: string;
   targetPosition?: number;
-  data?: any;
+  data?: Record<string, unknown>;
 }
 
 export interface BackupState {
@@ -343,9 +343,9 @@ export interface AppConfig {
 
 export class GitError extends Error {
   code: string;
-  details?: any;
+  details?: Record<string, unknown>;
   
-  constructor(message: string, code: string, details?: any) {
+  constructor(message: string, code: string, details?: Record<string, unknown>) {
     super(message);
     this.name = 'GitError';
     this.code = code;
