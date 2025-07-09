@@ -410,9 +410,18 @@ export class GraphEngine {
   }
 
   /**
-   * Timeline layout - organizes commits chronologically
+   * Timeline layout - organizes commits chronologically with time grouping
    */
   private calculateTimelineLayout(commits: GitCommit[], selectedCommits: string[]): GraphLayout {
+    if (commits.length === 0) {
+      return {
+        nodes: [],
+        connections: [],
+        bounds: { width: 0, height: 0, minX: 0, maxX: 0, minY: 0, maxY: 0 },
+        lanes: 0,
+      };
+    }
+
     // Sort commits by date for timeline view
     const sortedCommits = [...commits].sort((a, b) => 
       a.author.date.getTime() - b.author.date.getTime()
@@ -420,52 +429,231 @@ export class GraphEngine {
 
     const nodes: CommitNode[] = [];
     const connections: Connection[] = [];
+    const commitMap = new Map<string, GitCommit>();
+    commits.forEach(commit => commitMap.set(commit.hash, commit));
+
+    // Group commits by time periods
+    const timeGroups = this.groupCommitsByTimePeriod(sortedCommits);
     
-    sortedCommits.forEach((commit, index) => {
-      const y = index * this.config.verticalSpacing;
-      const x = this.config.laneWidth;
+    let currentY = this.config.nodeHeight * 2; // Start with some padding
+    const laneWidth = this.config.laneWidth * 1.2; // Slightly wider lanes for timeline
+    const groupSpacing = this.config.verticalSpacing * 3; // Extra space between time groups
+    const nodeSpacing = this.config.verticalSpacing * 1.5; // Space between nodes in same group
+    
+    timeGroups.forEach((group, groupIndex) => {
+      // Add time group label information (stored in lane 0 for rendering)
+      const groupLabelY = currentY - this.config.verticalSpacing;
       
-      const node: CommitNode = {
-        commit,
-        position: { x, y },
-        lane: 0,
-        connections: [],
-        isSelected: selectedCommits.includes(commit.hash),
-        isHighlighted: false,
-      };
-
-      nodes.push(node);
-
-      // Find connections to other commits (not necessarily sequential)
-      const originalIndex = commits.findIndex(c => c.hash === commit.hash);
-      if (originalIndex > 0) {
-        const connection: Connection = {
-          from: { x, y: y - this.config.verticalSpacing + this.config.nodeHeight },
-          to: { x, y: y },
-          type: 'parent',
-          color: this.branchColors[0],
-          lane: 0,
+      // Process commits in this time group
+      const groupCommits = group.commits;
+      
+      // Assign lanes within the group to handle concurrent commits
+      const laneAssignments = this.assignTimelineLanes(groupCommits);
+      const maxGroupLane = Math.max(0, ...laneAssignments.values());
+      
+      groupCommits.forEach((commit, commitIndex) => {
+        const assignedLane = laneAssignments.get(commit.hash) || 0;
+        const x = laneWidth + (assignedLane * laneWidth);
+        const y = currentY + (commitIndex * nodeSpacing);
+        
+        const node: CommitNode = {
+          commit,
+          position: { x, y },
+          lane: assignedLane,
+          connections: [],
+          isSelected: selectedCommits.includes(commit.hash),
+          isHighlighted: false,
         };
-        connections.push(connection);
-      }
+        
+        nodes.push(node);
+        
+        // Create connections to actual Git parents (not just chronological)
+        if (commit.parents && commit.parents.length > 0) {
+          commit.parents.forEach((parentHash, parentIndex) => {
+            const parentNode = nodes.find(n => n.commit.hash === parentHash);
+            if (parentNode) {
+              const isMainParent = parentIndex === 0;
+              const isMergeCommit = commit.parents.length > 1;
+              
+              const connectionType = isMergeCommit && !isMainParent ? 'merge' : 'parent';
+              const connectionColor = this.branchColors[assignedLane % this.branchColors.length];
+              
+              // Create connection with special timeline styling
+              const connection: Connection = {
+                from: { 
+                  x: parentNode.position.x, 
+                  y: parentNode.position.y + this.config.nodeHeight / 2 
+                },
+                to: { 
+                  x: x, 
+                  y: y - this.config.nodeHeight / 2 
+                },
+                type: connectionType,
+                color: connectionColor,
+                lane: assignedLane,
+              };
+              
+              connections.push(connection);
+            }
+          });
+        }
+      });
+      
+      // Move to next group position
+      currentY += (groupCommits.length * nodeSpacing) + groupSpacing;
     });
-
-    const height = Math.max(0, (sortedCommits.length - 1) * this.config.verticalSpacing + this.config.nodeHeight);
-    const width = this.config.laneWidth * 2;
-
+    
+    // Calculate bounds
+    const maxLane = Math.max(0, ...nodes.map(n => n.lane));
+    const totalWidth = laneWidth * (maxLane + 4); // Extra width for timeline labels
+    const totalHeight = currentY + this.config.nodeHeight * 2;
+    
     return {
       nodes,
       connections,
       bounds: {
-        width,
-        height,
+        width: totalWidth,
+        height: totalHeight,
         minX: 0,
-        maxX: width,
+        maxX: totalWidth,
         minY: 0,
-        maxY: height,
+        maxY: totalHeight,
       },
-      lanes: 1,
+      lanes: maxLane + 1,
     };
+  }
+
+  /**
+   * Group commits by time periods (day, week, or month depending on span)
+   */
+  private groupCommitsByTimePeriod(sortedCommits: GitCommit[]): Array<{
+    period: string;
+    startDate: Date;
+    endDate: Date;
+    commits: GitCommit[];
+  }> {
+    if (sortedCommits.length === 0) return [];
+    
+    const firstDate = sortedCommits[0].author.date;
+    const lastDate = sortedCommits[sortedCommits.length - 1].author.date;
+    const timeSpanDays = (lastDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24);
+    
+    // Choose grouping strategy based on time span
+    let groupingStrategy: 'day' | 'week' | 'month';
+    if (timeSpanDays <= 7) {
+      groupingStrategy = 'day';
+    } else if (timeSpanDays <= 90) {
+      groupingStrategy = 'week';
+    } else {
+      groupingStrategy = 'month';
+    }
+    
+    const groups = new Map<string, GitCommit[]>();
+    
+    sortedCommits.forEach(commit => {
+      const date = commit.author.date;
+      let groupKey: string;
+      
+      switch (groupingStrategy) {
+        case 'day':
+          groupKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
+          break;
+        case 'week':
+          const weekStart = new Date(date);
+          weekStart.setDate(date.getDate() - date.getDay()); // Start of week
+          groupKey = weekStart.toISOString().split('T')[0];
+          break;
+        case 'month':
+          groupKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          break;
+      }
+      
+      if (!groups.has(groupKey)) {
+        groups.set(groupKey, []);
+      }
+      groups.get(groupKey)!.push(commit);
+    });
+    
+    // Convert to sorted array with period labels
+    return Array.from(groups.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, commits]) => {
+        const firstCommit = commits[0];
+        const lastCommit = commits[commits.length - 1];
+        
+        let periodLabel: string;
+        switch (groupingStrategy) {
+          case 'day':
+            periodLabel = firstCommit.author.date.toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            });
+            break;
+          case 'week':
+            const weekEnd = new Date(firstCommit.author.date);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+            periodLabel = `Week of ${firstCommit.author.date.toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric'
+            })} - ${weekEnd.toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric'
+            })}`;
+            break;
+          case 'month':
+            periodLabel = firstCommit.author.date.toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long'
+            });
+            break;
+        }
+        
+        return {
+          period: periodLabel,
+          startDate: firstCommit.author.date,
+          endDate: lastCommit.author.date,
+          commits
+        };
+      });
+  }
+
+  /**
+   * Assign lanes for commits within a time group to handle concurrent commits
+   */
+  private assignTimelineLanes(commits: GitCommit[]): Map<string, number> {
+    const laneAssignments = new Map<string, number>();
+    const authorLanes = new Map<string, number>();
+    let nextLane = 0;
+    
+    // Group commits by author to keep same author in same lane when possible
+    const commitsByAuthor = new Map<string, GitCommit[]>();
+    commits.forEach(commit => {
+      const authorEmail = commit.author.email;
+      if (!commitsByAuthor.has(authorEmail)) {
+        commitsByAuthor.set(authorEmail, []);
+      }
+      commitsByAuthor.get(authorEmail)!.push(commit);
+    });
+    
+    // Assign lanes, trying to keep authors consistent
+    commits.forEach(commit => {
+      const authorEmail = commit.author.email;
+      
+      if (authorLanes.has(authorEmail)) {
+        // Use existing lane for this author
+        laneAssignments.set(commit.hash, authorLanes.get(authorEmail)!);
+      } else {
+        // Assign new lane for this author
+        authorLanes.set(authorEmail, nextLane);
+        laneAssignments.set(commit.hash, nextLane);
+        nextLane++;
+      }
+    });
+    
+    return laneAssignments;
   }
 
   /**

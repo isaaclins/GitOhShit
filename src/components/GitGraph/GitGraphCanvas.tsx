@@ -114,7 +114,7 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
     return (
       <g
         key={`commit-${commit.hash}`}
-        className={`git-commit-node ${isSelected ? 'git-commit-node--selected' : ''} ${isLinearView ? 'git-commit-node--linear' : ''} ${isTreeView ? 'git-commit-node--tree' : ''}`}
+        className={`git-commit-node ${isSelected ? 'git-commit-node--selected' : ''} ${isLinearView ? 'git-commit-node--linear' : ''} ${isTreeView ? 'git-commit-node--tree' : ''} ${viewMode === 'timeline' ? 'git-commit-node--timeline' : ''}`}
         onClick={() => handleCommitClick(commitNode)}
         onMouseEnter={() => handleCommitMouseEnter(commitNode)}
         onMouseLeave={handleCommitMouseLeave}
@@ -213,6 +213,70 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
                 fontWeight="600"
               >
                 🏷️ {commit.tags.length > 1 ? `${commit.tags.length} tags` : commit.tags[0]}
+              </text>
+            )}
+          </g>
+        )}
+
+        {/* Timeline view chronological metadata */}
+        {viewMode === 'timeline' && (
+          <g className="git-commit-metadata git-commit-metadata--timeline">
+            {/* Time stamp */}
+            <text
+              x={position.x + nodeRadius + 15}
+              y={position.y - 12}
+              className="git-commit-timestamp"
+              fontSize="10"
+              fill="#6b7280"
+              fontFamily="SF Mono, Monaco, Menlo, Ubuntu Mono, monospace"
+              fontWeight="500"
+            >
+              {commit.author.date.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+              })}
+              {isMergeCommit && <tspan fill="#ef4444" fontWeight="700" fontSize="8"> M</tspan>}
+              {isInitialCommit && <tspan fill="#06b6d4" fontWeight="700" fontSize="8"> I</tspan>}
+            </text>
+            
+            {/* Commit message with author */}
+            <text
+              x={position.x + nodeRadius + 15}
+              y={position.y + 2}
+              className="git-commit-message"
+              fontSize="13"
+              fill="#1f2937"
+              fontWeight={isSelected ? '600' : '500'}
+              fontFamily="-apple-system, BlinkMacSystemFont, Segoe UI, Inter, Roboto, sans-serif"
+            >
+              {formatCommitMessage(commit.message, 35)}
+            </text>
+            
+            {/* Author name and commit hash */}
+            <text
+              x={position.x + nodeRadius + 15}
+              y={position.y + 16}
+              className="git-commit-author"
+              fontSize="11"
+              fill="#6b7280"
+              fontFamily="-apple-system, BlinkMacSystemFont, Segoe UI, Inter, Roboto, sans-serif"
+            >
+              {commit.author.name} • {commitHash}
+            </text>
+            
+            {/* Tags display for timeline */}
+            {isTaggedCommit && (
+              <text
+                x={position.x + nodeRadius + 15}
+                y={position.y + 28}
+                className="git-commit-tags"
+                fontSize="10"
+                fill="#f59e0b"
+                fontWeight="600"
+              >
+                🏷️ {commit.tags.slice(0, 2).join(', ')}
+                {commit.tags.length > 2 && ` +${commit.tags.length - 2}`}
               </text>
             )}
           </g>
@@ -324,10 +388,11 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
   // Different scaling behavior for different view modes
   const isLinearView = viewMode === 'linear';
   const isTreeView = viewMode === 'tree';
+  const isTimelineView = viewMode === 'timeline';
   
-  // Linear view: enable scrolling, tree view: scale to fit, timeline: scale to fit
-  const svgHeight = isLinearView ? layout.bounds.height + 40 : '100%';
-  const preserveAspectRatio = isLinearView ? 'xMidYMin slice' : 'xMidYMin meet';
+  // Linear view: enable scrolling, tree view: scale to fit, timeline: enable scrolling with time labels
+  const svgHeight = (isLinearView || isTimelineView) ? layout.bounds.height + 40 : '100%';
+  const preserveAspectRatio = (isLinearView || isTimelineView) ? 'xMidYMin slice' : 'xMidYMin meet';
   
   if (commits.length === 0) {
     return (
@@ -339,8 +404,139 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
     );
   }
 
+  // Function to render time period labels for timeline view
+  const renderTimeLabels = useCallback(() => {
+    if (viewMode !== 'timeline' || commits.length === 0) return null;
+    
+    // Sort commits by date to group them
+    const sortedCommits = [...commits].sort((a, b) => 
+      a.author.date.getTime() - b.author.date.getTime()
+    );
+    
+    const firstDate = sortedCommits[0].author.date;
+    const lastDate = sortedCommits[sortedCommits.length - 1].author.date;
+    const timeSpanDays = (lastDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24);
+    
+    // Determine grouping strategy
+    let groupingStrategy: 'day' | 'week' | 'month';
+    if (timeSpanDays <= 7) {
+      groupingStrategy = 'day';
+    } else if (timeSpanDays <= 90) {
+      groupingStrategy = 'week';
+    } else {
+      groupingStrategy = 'month';
+    }
+    
+    // Group commits and create time labels
+    const groups = new Map<string, { commits: typeof sortedCommits, y: number }>();
+    let currentY = layout.bounds.minY + 40;
+    const groupSpacing = graphEngine.getConfig().verticalSpacing * 3;
+    const nodeSpacing = graphEngine.getConfig().verticalSpacing * 1.5;
+    
+    sortedCommits.forEach((commit, index) => {
+      const date = commit.author.date;
+      let groupKey: string;
+      
+      switch (groupingStrategy) {
+        case 'day':
+          groupKey = date.toISOString().split('T')[0];
+          break;
+        case 'week':
+          const weekStart = new Date(date);
+          weekStart.setDate(date.getDate() - date.getDay());
+          groupKey = weekStart.toISOString().split('T')[0];
+          break;
+        case 'month':
+          groupKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          break;
+      }
+      
+      if (!groups.has(groupKey)) {
+        groups.set(groupKey, { commits: [], y: currentY });
+      }
+      groups.get(groupKey)!.commits.push(commit);
+    });
+    
+    // Calculate Y positions for groups
+    let yPos = layout.bounds.minY + 40;
+    const groupEntries = Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b));
+    
+    return groupEntries.map(([key, group]) => {
+      const firstCommit = group.commits[0];
+      let periodLabel: string;
+      
+      switch (groupingStrategy) {
+        case 'day':
+          periodLabel = firstCommit.author.date.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          });
+          break;
+        case 'week':
+          const weekEnd = new Date(firstCommit.author.date);
+          weekEnd.setDate(weekEnd.getDate() + 6);
+          periodLabel = `Week of ${firstCommit.author.date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric'
+          })} - ${weekEnd.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+          })}`;
+          break;
+        case 'month':
+          periodLabel = firstCommit.author.date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long'
+          });
+          break;
+      }
+      
+      const groupY = yPos;
+      yPos += (group.commits.length * nodeSpacing) + groupSpacing;
+      
+      return (
+        <g key={`time-label-${key}`} className="git-timeline-period">
+          {/* Time period background */}
+          <rect
+            x={layout.bounds.minX}
+            y={groupY - 25}
+            width={layout.bounds.width}
+            height="20"
+            fill="rgba(59, 130, 246, 0.08)"
+            className="git-timeline-period-bg"
+          />
+          {/* Time period label */}
+          <text
+            x={layout.bounds.minX + 15}
+            y={groupY - 10}
+            className="git-timeline-period-label"
+            fontSize="12"
+            fill="#374151"
+            fontWeight="600"
+            fontFamily="-apple-system, BlinkMacSystemFont, Segoe UI, Inter, Roboto, sans-serif"
+          >
+            {periodLabel}
+          </text>
+          {/* Separator line */}
+          <line
+            x1={layout.bounds.minX + 10}
+            y1={groupY - 5}
+            x2={layout.bounds.maxX - 10}
+            y2={groupY - 5}
+            stroke="#e5e7eb"
+            strokeWidth="1"
+            className="git-timeline-separator"
+          />
+        </g>
+      );
+    });
+  }, [viewMode, commits, layout, graphEngine]);
+
   return (
-    <div className={`git-graph-canvas ${isLinearView ? 'git-graph-canvas--linear' : ''} ${isTreeView ? 'git-graph-canvas--tree' : ''} ${className}`}>
+    <div className={`git-graph-canvas ${isLinearView ? 'git-graph-canvas--linear' : ''} ${isTreeView ? 'git-graph-canvas--tree' : ''} ${isTimelineView ? 'git-graph-canvas--timeline' : ''} ${className}`}>
       <svg
         ref={svgRef}
         viewBox={viewBox}
@@ -357,6 +553,9 @@ const GitGraphCanvas: React.FC<GitGraphCanvasProps> = ({
         <g className="git-commit-nodes">
           {layout.nodes.map(renderCommitNode)}
         </g>
+
+        {/* Render time labels for timeline view */}
+        {renderTimeLabels()}
       </svg>
       
       {/* Optional: Debug info */}
